@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LogStreamX</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Inter;
+        }
+
+        body {
+            display: flex;
+            background: #0b1220;
+            color: #e5e7eb;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background: #0f172a;
+            padding: 20px;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 30px;
+        }
+
+        .nav div {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+
+            .nav div:hover {
+                background: #1e293b;
+                color: #fff;
+            }
+
+        /* MAIN */
+        .main {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .btn {
+            background: linear-gradient(135deg,#38bdf8,#2563eb);
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* CARD */
+        .card {
+            background: #111827;
+            padding: 15px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 15px;
+        }
+
+        /* LOGS */
+        .logs {
+            max-height: 500px;
+            overflow: auto;
+        }
+
+            .logs::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .logs::-webkit-scrollbar-thumb {
+                background: #1e293b;
+                border-radius: 10px;
+            }
+
+        .log {
+            padding: 14px;
+            margin-bottom: 12px;
+            background: linear-gradient(145deg,#0f172a,#111827);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.25s;
+        }
+
+            .log:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+                border-color: #38bdf8;
+            }
+
+        .meta {
+            font-size: 12px;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+
+        /* BADGES */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .kafka {
+            background: #22c55e20;
+            color: #22c55e;
+        }
+
+        .api {
+            background: #3b82f620;
+            color: #3b82f6;
+        }
+
+        .legacy {
+            background: #f59e0b20;
+            color: #f59e0b;
+        }
+
+        /* STATUS */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2,1fr);
+            gap: 15px;
+        }
+
+        .status-card {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .ok {
+            color: #22c55e;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="logo">LogStreamX</div>
+
+        <div class="nav">
+            <div onclick="setView('logs')"><i class="fa fa-database"></i> Logs</div>
+            <div onclick="setView('charts')"><i class="fa fa-chart-area"></i> Charts</div>
+            <div onclick="setView('kafka')"><i class="fa fa-bolt"></i> Kafka</div>
+            <div onclick="setView('status')"><i class="fa fa-heartbeat"></i> Status</div>
+        </div>
+    </div>
+
+    <div class="main">
+
+        <div class="topbar">
+            <div class="title">Live Logs</div>
+            <button class="btn" onclick="loadLogs()">Refresh</button>
+        </div>
+
+        <!-- LOGS (DEFAULT VIEW) -->
+        <div id="logsView">
+            <div class="card">
+                <div class="logs" id="logs"></div>
+            </div>
+
+            <div class="card">
+                Total Logs: <b id="total">0</b>
+            </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div id="chartsView" style="display:none;">
+            <div class="card">
+                <h3>Log Trend</h3>
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+
+        <!-- KAFKA -->
+        <div id="kafkaView" style="display:none;">
+            <div class="card">
+                Kafka Streaming <span class="ok">● ACTIVE</span>
+            </div>
+        </div>
+
+        <!-- STATUS -->
+        <div id="statusView" style="display:none;">
+            <div class="card">
+                <h3>System Status</h3>
+
+                <div class="status-grid">
+                    <div class="status-card">API: <span class="ok">Running</span></div>
+                    <div class="status-card">DB: <span class="ok">Connected</span></div>
+                    <div class="status-card">Kafka: <span class="ok">Streaming</span></div>
+                    <div class="status-card">UI: <span class="ok">Stable</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+
+        const API = "/api/logs";
+        let chart;
+
+        async function loadLogs() {
+            const res = await fetch(API);
+            const data = await res.json();
+
+            document.getElementById("total").innerText = data.length;
+
+            let html = "";
+            let labels = [];
+            let values = [];
+
+            data.forEach((x, i) => {
+
+                let msg = x.message;
+                try {
+                    if (msg.startsWith("{")) {
+                        msg = JSON.parse(msg).message;
+                    }
+                } catch { }
+
+                labels.push(new Date(x.createdAt).toLocaleTimeString());
+                values.push(i + 1);
+
+                html += `
+            <div class="log" ${i === 0 ? 'style="border:1px solid #38bdf8;"' : ''}>
+                <div style="font-weight:600;">${msg}</div>
+
+                <div class="meta">
+                    <span class="badge ${x.source || 'api'}">${x.source || 'api'}</span>
+                    <span>${new Date(x.createdAt).toLocaleString()}</span>
+                </div>
+            </div>`;
+            });
+
+            document.getElementById("logs").innerHTML = html;
+
+            drawChart(labels, values);
+        }
+
+        function drawChart(labels, data) {
+            const ctx = document.getElementById("chart");
+
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        borderColor: "#38bdf8",
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: false } }
+                }
+            });
+        }
+
+        function setView(v) {
+
+            document.getElementById("logsView").style.display = "none";
+            document.getElementById("chartsView").style.display = "none";
+            document.getElementById("kafkaView").style.display = "none";
+            document.getElementById("statusView").style.display = "none";
+
+            if (v === "logs") {
+                document.getElementById("logsView").style.display = "block";
+                loadLogs();
+            }
+
+            if (v === "charts") {
+                document.getElementById("chartsView").style.display = "block";
+            }
+
+            if (v === "kafka") {
+                document.getElementById("kafkaView").style.display = "block";
+            }
+
+            if (v === "status") {
+                document.getElementById("statusView").style.display = "block";
+            }
+        }
+
+        loadLogs();
+        setInterval(loadLogs, 5000);
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\bin\Debug\net8.0\LogStreamX.Infrastructure.deps.json
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\bin\Debug\net8.0\LogStreamX.Infrastructure.runtimeconfig.json
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\bin\Debug\net8.0\LogStreamX.Infrastructure.dll
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\bin\Debug\net8.0\LogStreamX.Infrastructure.pdb
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\LogStreamX.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\LogStreamX.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\LogStreamX.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\LogStreamX.Infrastructure.AssemblyInfo.cs
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\LogStreamX.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\LogStreamX.Infrastructure.dll
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\refint\LogStreamX.Infrastructure.dll
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\LogStreamX.Infrastructure.pdb
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\LogStreamX.Infrastructure.genruntimeconfig.cache
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net8.0\ref\LogStreamX.Infrastructure.dll

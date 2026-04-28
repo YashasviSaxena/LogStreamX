@@ -1,0 +1,105 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|c:\\users\\hp\\onedrive\\desktop\\yashasvi\\netpractice\\logstreamx\\logstreamx.api\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|solutionrelative:logstreamx.api\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|c:\\users\\hp\\onedrive\\desktop\\yashasvi\\netpractice\\logstreamx\\logstreamx.api\\controllers\\logscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|solutionrelative:logstreamx.api\\controllers\\logscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|c:\\users\\hp\\onedrive\\desktop\\yashasvi\\netpractice\\logstreamx\\logstreamx.api\\controllers\\logpushcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|solutionrelative:logstreamx.api\\controllers\\logpushcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|c:\\users\\hp\\onedrive\\desktop\\yashasvi\\netpractice\\logstreamx\\logstreamx.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|solutionrelative:logstreamx.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|c:\\users\\hp\\onedrive\\desktop\\yashasvi\\netpractice\\logstreamx\\logstreamx.api\\services\\kafkaproducerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3822C242-6FAF-B1BC-95AE-393D2B12AF6A}|LogStreamX.API\\LogStreamX.API.csproj|solutionrelative:logstreamx.api\\services\\kafkaproducerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\Program.cs",
+              "RelativeDocumentMoniker": "LogStreamX.API\\Program.cs",
+              "ToolTip": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\Program.cs",
+              "RelativeToolTip": "LogStreamX.API\\Program.cs",
+              "ViewState": "AgIAACQAAAAAAAAAAAAqwD0AAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-27T15:26:07.95Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "LogsController.cs",
+              "DocumentMoniker": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\Controllers\\LogsController.cs",
+              "RelativeDocumentMoniker": "LogStreamX.API\\Controllers\\LogsController.cs",
+              "ToolTip": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\Controllers\\LogsController.cs",
+              "RelativeToolTip": "LogStreamX.API\\Controllers\\LogsController.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAqwBsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-27T14:26:14.62Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "LogPushController.cs",
+              "DocumentMoniker": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\Controllers\\LogPushController.cs",
+              "RelativeDocumentMoniker": "LogStreamX.API\\Controllers\\LogPushController.cs",
+              "ToolTip": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\Controllers\\LogPushController.cs",
+              "RelativeToolTip": "LogStreamX.API\\Controllers\\LogPushController.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAqwCkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-27T15:01:27.874Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "KafkaProducerService.cs",
+              "DocumentMoniker": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\Services\\KafkaProducerService.cs",
+              "RelativeDocumentMoniker": "LogStreamX.API\\Services\\KafkaProducerService.cs",
+              "ToolTip": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\Services\\KafkaProducerService.cs",
+              "RelativeToolTip": "LogStreamX.API\\Services\\KafkaProducerService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-27T17:22:36.431Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "index.html",
+              "DocumentMoniker": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\wwwroot\\index.html",
+              "RelativeDocumentMoniker": "LogStreamX.API\\wwwroot\\index.html",
+              "ToolTip": "C:\\Users\\hp\\OneDrive\\Desktop\\Yashasvi\\NetPractice\\LogStreamX\\LogStreamX.API\\wwwroot\\index.html",
+              "RelativeToolTip": "LogStreamX.API\\wwwroot\\index.html",
+              "ViewState": "AgIAADwBAAAAAAAAAAAAwEcBAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-04-26T16:35:13.87Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

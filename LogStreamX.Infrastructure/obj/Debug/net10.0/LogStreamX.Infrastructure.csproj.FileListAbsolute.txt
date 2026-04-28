@@ -1,0 +1,5 @@
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net10.0\LogStreamX.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net10.0\LogStreamX.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net10.0\LogStreamX.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net10.0\LogStreamX.Infrastructure.AssemblyInfo.cs
+C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Infrastructure\obj\Debug\net10.0\LogStreamX.Infrastructure.csproj.CoreCompileInputs.cache

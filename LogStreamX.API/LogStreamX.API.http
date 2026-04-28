@@ -1,0 +1,6 @@
+@LogStreamX.API_HostAddress = http://localhost:5191
+
+GET {{LogStreamX.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
