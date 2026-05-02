@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using LogStreamX.Infrastructure.Data;
 using LogStreamX.Infrastructure.Models;
 
@@ -16,55 +15,38 @@ namespace LogStreamX.API.Controllers
             _context = context;
         }
 
-        // GET ALL LOGS
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public IActionResult GetLogs()
         {
             try
             {
-                var logs = await _context.LogEntries
-                    .OrderByDescending(x => x.Id)
-                    .ToListAsync();
+                var logs = _context.LogEntries
+                    .OrderByDescending(x => x.CreatedAt)
+                    .ToList();
 
                 return Ok(logs);
             }
             catch (Exception ex)
             {
-                return Ok(new List<object>
-                {
-                    new { error = ex.Message }
-                });
+                return Ok(new { error = ex.Message });
             }
         }
 
-        // POST LOG (FIXED)
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] LogEntry log)
+        public IActionResult AddLog(LogEntry log)
         {
             try
             {
-                if (log == null)
-                    return BadRequest("Invalid log");
+                log.CreatedAt = DateTime.UtcNow;
 
-                var entity = new LogEntry
-                {
-                    EventId = log.EventId ?? "NA",
-                    Message = log.Message ?? "NA",
-                    Source = log.Source ?? "swagger",
-                    CreatedAt = DateTime.UtcNow
-                };
+                _context.LogEntries.Add(log);
+                _context.SaveChanges();
 
-                _context.LogEntries.Add(entity);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { status = "saved" });
+                return Ok(log);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    error = ex.Message
-                });
+                return StatusCode(500, new { error = ex.Message });
             }
         }
     }
