@@ -12,22 +12,16 @@
             margin: 0;
             font-family: Arial;
             background: #0b1220;
-            color: white;
+            color: #fff;
             display: flex;
         }
 
         .sidebar {
             width: 220px;
-            background: #0f172a;
+            background: #111827;
             height: 100vh;
             padding: 20px;
         }
-
-            .sidebar div {
-                padding: 10px;
-                margin: 8px 0;
-                cursor: pointer;
-            }
 
         .main {
             flex: 1;
@@ -35,16 +29,26 @@
         }
 
         .card {
-            background: #111827;
+            background: #1f2937;
             padding: 15px;
             border-radius: 10px;
+            margin-bottom: 15px;
         }
 
         .log {
             padding: 10px;
-            background: #0f172a;
-            margin: 10px 0;
+            background: #111827;
+            margin: 8px 0;
             border-left: 3px solid #38bdf8;
+        }
+
+        .btn {
+            padding: 10px;
+            background: #38bdf8;
+            border: none;
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -52,52 +56,31 @@
 <body>
 
     <div class="sidebar">
-        <h2>LogStreamX</h2>
-        <div onclick="showTab('dashboard')">Dashboard</div>
-        <div onclick="showTab('logs')">Logs</div>
-        <div onclick="showTab('kafka')">Kafka</div>
-        <div onclick="showTab('settings')">Settings</div>
+        <h3>LogStreamX</h3>
+        <p>Dashboard</p>
+        <p>Logs</p>
+        <p>Kafka</p>
+        <p>Settings</p>
     </div>
 
     <div class="main">
 
-        <div id="dashboard" class="tab">
-            <div class="card">
-                <h3>Total Logs: <span id="total">0</span></h3>
-            </div>
+        <h2>Live Logs</h2>
+        <button class="btn" onclick="loadLogs()">Refresh</button>
+
+        <div class="card">
+            Total Logs: <span id="total">0</span>
         </div>
 
-        <div id="logs" class="tab">
-            <div class="card">
-                <h3>Live Logs</h3>
-                <div id="logList"></div>
-            </div>
-        </div>
+        <div class="card" id="logs"></div>
 
-        <div id="kafka" class="tab" style="display:none;">
-            <div class="card">
-                <h3>Kafka Status</h3>
-                <p>✅ Connected</p>
-            </div>
-        </div>
-
-        <div id="settings" class="tab" style="display:none;">
-            <div class="card">
-                <h3>Settings</h3>
-                <p>No settings yet</p>
-            </div>
-        </div>
+        <canvas id="chart"></canvas>
 
     </div>
 
     <script>
+        let chart;
 
-        function showTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
-            document.getElementById(tab).style.display = 'block';
-        }
-
-        // SAFE FETCH (FIXED FOR RENDER)
         async function loadLogs() {
             try {
                 const res = await fetch('/api/logs');
@@ -107,13 +90,27 @@
                     return;
                 }
 
-                const data = await res.json();
+                const text = await res.text();
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error("Invalid JSON:", text);
+                    return;
+                }
 
                 document.getElementById("total").innerText = data.length;
 
                 let html = "";
+                let labels = [];
+                let counts = [];
 
-                data.forEach(x => {
+                data.forEach((x, i) => {
+                    let t = new Date(x.createdAt).toLocaleTimeString();
+                    labels.push(t);
+                    counts.push(i + 1);
+
                     html += `
                 <div class="log">
                     <b>${x.message}</b><br/>
@@ -121,16 +118,35 @@
                 </div>`;
                 });
 
-                document.getElementById("logList").innerHTML = html;
+                document.getElementById("logs").innerHTML = html;
+
+                drawChart(labels, counts);
 
             } catch (err) {
                 console.error("UI Error:", err);
             }
         }
 
+        function drawChart(labels, data) {
+            const ctx = document.getElementById('chart');
+
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Logs',
+                        data: data,
+                        borderColor: '#38bdf8'
+                    }]
+                }
+            });
+        }
+
         loadLogs();
         setInterval(loadLogs, 5000);
-
     </script>
 
 </body>

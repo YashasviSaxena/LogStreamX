@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using LogStreamX.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using LogStreamX.Infrastructure.Data;
 
 namespace LogStreamX.API.Controllers
 {
@@ -21,8 +21,7 @@ namespace LogStreamX.API.Controllers
             try
             {
                 var logs = await _context.LogEntries
-                    .OrderByDescending(x => x.Id)
-                    .Take(100)
+                    .OrderByDescending(x => x.CreatedAt)
                     .ToListAsync();
 
                 return Ok(logs);
