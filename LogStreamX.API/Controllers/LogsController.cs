@@ -16,7 +16,7 @@ namespace LogStreamX.API.Controllers
             _context = context;
         }
 
-        // ✅ SAFE GET (UI NEVER BREAKS)
+        // GET: /api/logs
         [HttpGet]
         public async Task<IActionResult> GetLogs()
         {
@@ -24,28 +24,55 @@ namespace LogStreamX.API.Controllers
             {
                 var logs = await _context.LogEntries
                     .OrderByDescending(x => x.CreatedAt)
-                    .Take(200)
                     .ToListAsync();
 
                 return Ok(logs);
             }
             catch (Exception ex)
             {
-                // ❌ NEVER BREAK UI
-                return Ok(new List<LogEntry>());
+                return Ok(new
+                {
+                    error = true,
+                    message = ex.Message
+                });
             }
         }
 
-        // ✅ SAVE LOG
+        // POST: /api/logs
         [HttpPost]
-        public async Task<IActionResult> CreateLog(LogEntry log)
+        public async Task<IActionResult> AddLog([FromBody] LogEntry log)
         {
-            log.CreatedAt = DateTime.UtcNow;
+            try
+            {
+                if (log == null)
+                    return BadRequest("Invalid log");
 
-            _context.LogEntries.Add(log);
-            await _context.SaveChangesAsync();
+                log.CreatedAt = DateTime.UtcNow;
 
-            return Ok(new { success = true });
+                await _context.LogEntries.AddAsync(log);
+                await _context.SaveChangesAsync();
+
+                return Ok(log);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = true,
+                    message = ex.Message
+                });
+            }
+        }
+
+        // DEBUG
+        [HttpGet("debug")]
+        public IActionResult Debug()
+        {
+            return Ok(new
+            {
+                status = "Logs API OK",
+                time = DateTime.UtcNow
+            });
         }
     }
 }

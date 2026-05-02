@@ -1,46 +1,40 @@
-﻿using LogStreamX.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using LogStreamX.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================= DB =================
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// ================= CONTROLLERS =================
+// Controllers
 builder.Services.AddControllers();
 
-// ================= SWAGGER =================
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// DB Context
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ================= CORS (FOR UI SAFETY) =================
+// CORS (UI FIX)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
+        });
 });
 
 var app = builder.Build();
 
-// ================= PIPELINE =================
-app.UseSwagger();
-app.UseSwaggerUI();
-
 app.UseCors("AllowAll");
 
-app.UseDefaultFiles();   // IMPORTANT (serves index.html)
-app.UseStaticFiles();    // IMPORTANT (wwwroot UI)
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
-// ================= CONTROLLERS =================
 app.MapControllers();
 
-// ================= HEALTH CHECK =================
-app.MapGet("/", () => "LogStreamX API Running 🚀");
+// Root route serves UI
+app.MapGet("/", () =>
+{
+    return Results.Content(System.IO.File.ReadAllText("wwwroot/index.html"), "text/html");
+});
 
 app.Run();
