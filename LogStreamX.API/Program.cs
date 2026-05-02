@@ -1,17 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
-using LogStreamX.Infrastructure.Data;
+﻿using LogStreamX.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Controllers
 builder.Services.AddControllers();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// ✅ PostgreSQL connection
-builder.Services.AddDbContext<LogDbContext>(options =>
-    options.UseNpgsql(connectionString)
+// DB Context (IMPORTANT)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
 );
 
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -20,9 +22,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
