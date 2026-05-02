@@ -3,19 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =====================
-// SERVICES
-// =====================
 builder.Services.AddControllers();
 
-// EF Core SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// =====================
-// CORS (FIX FOR FRONTEND)
-// =====================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -27,15 +20,11 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Swagger (optional but useful)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// =====================
-// PIPELINE
-// =====================
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -45,8 +34,19 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// =====================
-// RENDER PORT FIX
-// =====================
+// ✅ ROOT ENDPOINT FIX
+app.MapGet("/", () =>
+{
+    return Results.Ok(new
+    {
+        status = "LogStreamX API Running 🚀",
+        endpoints = new[]
+        {
+            "/api/logs"
+        }
+    });
+});
+
+// Render port fix
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 app.Run($"http://0.0.0.0:{port}");
