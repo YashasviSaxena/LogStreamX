@@ -227,44 +227,18 @@
             <div class="card">
                 <h3>⚙ System Configuration</h3>
 
-                <div class="stat">
-                    <span>Environment</span>
-                    <b>Production</b>
-                </div>
+                <div class="stat"><span>Environment</span><b>Production</b></div>
+                <div class="stat"><span>API Status</span><span class="badge">Running</span></div>
+                <div class="stat"><span>Database</span><span class="badge">Connected</span></div>
+                <div class="stat"><span>Kafka</span><span class="badge">Active</span></div>
 
-                <div class="stat">
-                    <span>API Status</span>
-                    <span class="badge">Running</span>
-                </div>
-
-                <div class="stat">
-                    <span>Database</span>
-                    <span class="badge">Connected</span>
-                </div>
-
-                <div class="stat">
-                    <span>Kafka</span>
-                    <span class="badge">Active</span>
-                </div>
             </div>
 
             <div class="card">
                 <h3>🔗 System Info</h3>
 
-                <div class="stat">
-                    <span>API Base</span>
-                    <b id="apiBase"></b>
-                </div>
-
-                <div class="stat">
-                    <span>Logs Endpoint</span>
-                    <b>/api/logs</b>
-                </div>
-
-                <div class="stat">
-                    <span>Health Check</span>
-                    <b>/debug-db</b>
-                </div>
+                <div class="stat"><span>API Base</span><b id="apiBase"></b></div>
+                <div class="stat"><span>Endpoint</span><b>/api/logs</b></div>
 
             </div>
         </div>
@@ -277,7 +251,7 @@
 
         let chart;
 
-        // ================= TAB SYSTEM =================
+        // ================= TAB SWITCH =================
         function switchTab(tab) {
 
             document.querySelectorAll(".nav div").forEach(x => x.classList.remove("active"));
@@ -299,50 +273,64 @@
             }
         }
 
-        // ================= LOAD DATA =================
+        // ================= SAFE DATA LOAD =================
         async function loadData() {
 
             try {
 
                 const res = await fetch(`${API}/api/logs`);
-                const data = await res.json();
 
-                const logs = Array.isArray(data) ? data : [];
+                if (!res.ok) {
+                    console.log("API Error:", res.status);
+                    return;
+                }
 
-                document.getElementById("total").innerText = logs.length;
+                const text = await res.text();
 
-                // RECENT LOGS
+                let data = [];
+
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    return;
+                }
+
+                if (!Array.isArray(data)) data = [];
+
+                document.getElementById("total").innerText = data.length;
+
+                // RECENT
                 document.getElementById("recentLogs").innerHTML =
-                    logs.slice(0, 5).map(x => `
+                    data.slice(0, 5).map(x => `
 <div class="log">
-<div>${x.message || "No message"}</div>
+<div>${x.message ?? "No message"}</div>
 <div class="meta">
-<span>${x.eventId || "-"}</span>
-<span>${new Date(x.createdAt || Date.now()).toLocaleString()}</span>
+<span>${x.eventId ?? "-"}</span>
+<span>${new Date(x.createdAt ?? Date.now()).toLocaleString()}</span>
 </div>
 </div>
 `).join("") || "<div>No logs</div>";
 
-                // ALL LOGS
+                // ALL
                 document.getElementById("allLogs").innerHTML =
-                    logs.map(x => `
+                    data.map(x => `
 <div class="log">
-<div>${x.message || "No message"}</div>
+<div>${x.message ?? "No message"}</div>
 <div class="meta">
-<span>${x.eventId || "-"}</span>
-<span>${new Date(x.createdAt || Date.now()).toLocaleString()}</span>
+<span>${x.eventId ?? "-"}</span>
+<span>${new Date(x.createdAt ?? Date.now()).toLocaleString()}</span>
 </div>
 </div>
 `).join("") || "<div>No logs found</div>";
 
                 // CHART
                 drawChart(
-                    logs.map(x => new Date(x.createdAt).toLocaleTimeString()),
-                    logs.map((_, i) => i + 1)
+                    data.map(x => new Date(x.createdAt).toLocaleTimeString()),
+                    data.map((_, i) => i + 1)
                 );
 
-            } catch (err) {
-                console.log(err);
+            } catch (e) {
+                console.log("Load error", e);
             }
 
         }

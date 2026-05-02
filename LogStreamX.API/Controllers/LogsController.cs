@@ -3,60 +3,51 @@ using Microsoft.EntityFrameworkCore;
 using LogStreamX.Infrastructure.Data;
 using LogStreamX.Infrastructure.Models;
 
-namespace LogStreamX.API.Controllers;
-
-[ApiController]
-[Route("api/logs")]
-public class LogsController : ControllerBase
+namespace LogStreamX.API.Controllers
 {
-    private readonly AppDbContext _context;
-
-    public LogsController(AppDbContext context)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class LogsController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
 
-    [HttpGet]
-    public async Task<IActionResult> Get()
-    {
-        try
+        public LogsController(AppDbContext context)
         {
-            if (_context == null)
-                return Ok(new List<object>());
-
-            var logs = await _context.LogEntries
-                .OrderByDescending(x => x.CreatedAt)
-                .Take(200)
-                .ToListAsync();
-
-            return Ok(logs);
+            _context = context;
         }
-        catch (Exception ex)
+
+        // GET: api/logs
+        [HttpGet]
+        public async Task<IActionResult> GetLogs()
         {
-            // NEVER crash frontend with 500 HTML page
+            try
+            {
+                var logs = await _context.LogEntries
+                    .OrderByDescending(x => x.CreatedAt)
+                    .Take(100)
+                    .ToListAsync();
+
+                return Ok(logs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = "Database error",
+                    message = ex.Message
+                });
+            }
+        }
+
+        // OPTIONAL TEST ENDPOINT
+        [HttpGet("health")]
+        public IActionResult Health()
+        {
             return Ok(new
             {
-                error = true,
-                message = ex.Message
+                status = "Logs API OK",
+                time = DateTime.UtcNow
             });
-        }
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Add(LogEntry log)
-    {
-        try
-        {
-            log.CreatedAt = DateTime.UtcNow;
-
-            _context.LogEntries.Add(log);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return Ok(new { error = true, message = ex.Message });
         }
     }
 }
