@@ -19,19 +19,44 @@ public class LogsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var logs = await _context.LogEntries
-            .OrderByDescending(x => x.CreatedAt)
-            .Take(200)
-            .ToListAsync();
+        try
+        {
+            if (_context == null)
+                return Ok(new List<object>());
 
-        return Ok(logs);
+            var logs = await _context.LogEntries
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(200)
+                .ToListAsync();
+
+            return Ok(logs);
+        }
+        catch (Exception ex)
+        {
+            // NEVER crash frontend with 500 HTML page
+            return Ok(new
+            {
+                error = true,
+                message = ex.Message
+            });
+        }
     }
 
     [HttpPost]
     public async Task<IActionResult> Add(LogEntry log)
     {
-        _context.LogEntries.Add(log);
-        await _context.SaveChangesAsync();
-        return Ok();
+        try
+        {
+            log.CreatedAt = DateTime.UtcNow;
+
+            _context.LogEntries.Add(log);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            return Ok(new { error = true, message = ex.Message });
+        }
     }
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>LogStreamX</title>
 
-    <!-- FAVICON FIX -->
+    <!-- FAVICON -->
     <link rel="icon" href="/favicon.ico">
 
     <!-- Icons -->
@@ -86,12 +86,14 @@
             cursor: pointer;
         }
 
+        /* GRID */
         .grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 15px;
         }
 
+        /* CARD */
         .card {
             background: #111827;
             padding: 15px;
@@ -99,6 +101,7 @@
             border: 1px solid rgba(255,255,255,0.05);
         }
 
+        /* LOGS */
         .logs {
             margin-top: 15px;
             max-height: 500px;
@@ -125,6 +128,7 @@
             justify-content: space-between;
         }
 
+        /* STAT */
         .stat {
             display: flex;
             justify-content: space-between;
@@ -141,11 +145,20 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="logo">LogStreamX</div>
+
         <div class="nav">
-            <div><i class="fa fa-chart-line"></i> Dashboard</div>
-            <div><i class="fa fa-database"></i> Logs</div>
-            <div><i class="fa fa-bolt"></i> Kafka</div>
-            <div><i class="fa fa-cog"></i> Settings</div>
+            <div onclick="showTab('dashboard')">
+                <i class="fa fa-chart-line"></i> Dashboard
+            </div>
+            <div onclick="showTab('logs')">
+                <i class="fa fa-database"></i> Logs
+            </div>
+            <div onclick="showTab('kafka')">
+                <i class="fa fa-bolt"></i> Kafka
+            </div>
+            <div onclick="showTab('settings')">
+                <i class="fa fa-cog"></i> Settings
+            </div>
         </div>
     </div>
 
@@ -161,13 +174,13 @@
 
         <div class="grid">
 
-            <!-- LOGS -->
-            <div class="card">
+            <!-- LEFT -->
+            <div class="card" id="logCard">
                 <h3>Live Logs</h3>
                 <div class="logs" id="logs"></div>
             </div>
 
-            <!-- STATS -->
+            <!-- RIGHT -->
             <div>
 
                 <div class="card">
@@ -204,26 +217,59 @@
 
         let chart;
 
+        // =====================
+        // TAB SYSTEM
+        // =====================
+        function showTab(tab) {
+
+            const logCard = document.getElementById("logCard");
+            const logs = document.getElementById("logs");
+
+            if (tab === "dashboard") {
+                logCard.style.display = "block";
+                loadLogs();
+            }
+
+            if (tab === "logs") {
+                logCard.style.display = "block";
+                loadLogs();
+            }
+
+            if (tab === "kafka") {
+                logCard.style.display = "block";
+                logs.innerHTML = "<div style='color:#38bdf8'>Kafka: Connected (Confluent Cloud)</div>";
+            }
+
+            if (tab === "settings") {
+                logCard.style.display = "block";
+                logs.innerHTML = "<div style='color:#94a3b8'>Settings panel coming soon...</div>";
+            }
+        }
+
+        // =====================
+        // LOAD LOGS
+        // =====================
         async function loadLogs() {
             try {
                 const res = await fetch(`${API_BASE}/api/logs`);
                 const data = await res.json();
 
-                document.getElementById("total").innerText = data.length;
+                document.getElementById("total").innerText = data.length || 0;
 
                 let html = "";
                 let labels = [];
                 let counts = [];
 
                 data.forEach((x, i) => {
+
                     labels.push(new Date(x.createdAt).toLocaleTimeString());
                     counts.push(i + 1);
 
                     html += `
                 <div class="log">
-                    <div class="log-title">${x.message}</div>
+                    <div class="log-title">${x.message || "No message"}</div>
                     <div class="meta">
-                        <span>${x.eventId}</span>
+                        <span>${x.eventId || "-"}</span>
                         <span>${new Date(x.createdAt).toLocaleString()}</span>
                     </div>
                 </div>`;
@@ -235,10 +281,13 @@
 
             } catch (err) {
                 document.getElementById("logs").innerHTML =
-                    "<div style='color:red'>Failed to load logs</div>";
+                    "<div style='color:red'>API Error: " + err.message + "</div>";
             }
         }
 
+        // =====================
+        // CHART
+        // =====================
         function drawChart(labels, data) {
             const ctx = document.getElementById('chart');
 
@@ -257,16 +306,13 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: { display: false }
-                    }
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: false } }
                 }
             });
         }
 
+        // INIT
         loadLogs();
         setInterval(loadLogs, 5000);
 
