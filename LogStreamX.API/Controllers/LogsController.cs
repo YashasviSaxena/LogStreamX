@@ -16,11 +16,9 @@ namespace LogStreamX.API.Controllers
             _db = db;
         }
 
-        // =========================
-        // GET: api/logs
-        // =========================
+        // ================= GET LOGS =================
         [HttpGet]
-        public async Task<IActionResult> GetLogs()
+        public async Task<IActionResult> Get()
         {
             try
             {
@@ -33,43 +31,42 @@ namespace LogStreamX.API.Controllers
             }
             catch (Exception ex)
             {
-                // 🔥 ALWAYS RETURN SAFE JSON (prevents UI crash)
-                return StatusCode(500, new
+                // 🔥 NEVER BREAK UI
+                return Ok(new List<object>
                 {
-                    error = ex.Message,
-                    source = "GetLogs"
+                    new
+                    {
+                        error = ex.Message,
+                        source = "GetLogs"
+                    }
                 });
             }
         }
 
-        // =========================
-        // POST: api/logs
-        // =========================
+        // ================= CREATE LOG =================
         [HttpPost]
-        public async Task<IActionResult> CreateLog([FromBody] LogEntry request)
+        public async Task<IActionResult> Create([FromBody] LogEntry log)
         {
             try
             {
-                if (request == null)
-                {
-                    return BadRequest(new { error = "Request body is null" });
-                }
+                if (log == null)
+                    return BadRequest(new { error = "Invalid payload" });
 
-                var log = new LogEntry
+                var entity = new LogEntry
                 {
-                    EventId = request.EventId ?? "unknown",
-                    Message = request.Message ?? "empty",
-                    Source = request.Source ?? "api",
+                    EventId = log.EventId ?? "unknown",
+                    Message = log.Message ?? "",
+                    Source = log.Source ?? "api",
                     CreatedAt = DateTime.UtcNow
                 };
 
-                _db.LogEntries.Add(log);
+                _db.LogEntries.Add(entity);
                 await _db.SaveChangesAsync();
 
                 return Ok(new
                 {
                     status = "saved",
-                    log.EventId
+                    entity.EventId
                 });
             }
             catch (Exception ex)
@@ -82,9 +79,7 @@ namespace LogStreamX.API.Controllers
             }
         }
 
-        // =========================
-        // DEBUG: api/logs/debug
-        // =========================
+        // ================= DEBUG =================
         [HttpGet("debug")]
         public IActionResult Debug()
         {
