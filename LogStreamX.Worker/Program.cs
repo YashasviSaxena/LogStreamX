@@ -1,17 +1,12 @@
 ﻿using LogStreamX.Worker;
 using LogStreamX.Worker.Services;
-using LogStreamX.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// DB registration (MANDATORY)
-builder.Services.AddDbContext<LogDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// FIX: Singleton (NOT scoped)
+// DI
 builder.Services.AddSingleton<KafkaConsumerService>();
-
 builder.Services.AddHostedService<Worker>();
 
 var host = builder.Build();

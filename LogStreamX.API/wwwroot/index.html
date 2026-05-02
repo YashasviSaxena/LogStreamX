@@ -6,88 +6,114 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: Inter;
+        }
+
+        body {
             background: #0b1220;
             color: #e5e7eb;
             display: flex;
         }
 
+        /* SIDEBAR */
         .sidebar {
             width: 240px;
             background: #0f172a;
             height: 100vh;
             padding: 20px;
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
 
         .logo {
             font-size: 18px;
             font-weight: 700;
             color: #38bdf8;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
         .nav div {
             padding: 12px;
             margin-bottom: 10px;
+            border-radius: 10px;
             cursor: pointer;
             color: #94a3b8;
-            border-radius: 10px;
+            transition: 0.2s;
         }
 
-            .nav div:hover,
-            .nav .active {
-                background: rgba(56,189,248,0.15);
+            .nav div:hover {
+                background: rgba(56,189,248,0.1);
                 color: white;
             }
 
+        /* MAIN */
         .main {
             flex: 1;
             padding: 20px;
         }
 
+        /* TOP BAR */
         .topbar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: 700;
         }
 
         .btn {
             background: linear-gradient(135deg,#38bdf8,#2563eb);
             border: none;
             padding: 10px 14px;
-            color: white;
             border-radius: 10px;
+            color: white;
             cursor: pointer;
         }
 
+        /* GRID */
         .grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 15px;
         }
 
+        /* CARD */
         .card {
             background: #111827;
             padding: 15px;
             border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
+        /* LOGS */
         .logs {
+            margin-top: 15px;
             max-height: 500px;
             overflow-y: auto;
         }
 
         .log {
-            background: #0f172a;
             padding: 12px;
             margin-bottom: 10px;
+            background: #0f172a;
+            border-radius: 10px;
             border-left: 3px solid #38bdf8;
-            border-radius: 8px;
+        }
+
+        .log-title {
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
         .meta {
@@ -97,13 +123,26 @@
             justify-content: space-between;
         }
 
+        /* STATS */
         .stat {
             display: flex;
             justify-content: space-between;
+            margin-bottom: 10px;
             padding: 10px;
             background: #0f172a;
             border-radius: 10px;
-            margin-bottom: 10px;
+        }
+
+            .stat i {
+                color: #38bdf8;
+            }
+
+        /* STATUS BADGE */
+        .badge {
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: #16a34a;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -115,7 +154,7 @@
         <div class="logo">LogStreamX</div>
 
         <div class="nav">
-            <div class="active" onclick="showTab('dashboard')"><i class="fa fa-chart-line"></i> Dashboard</div>
+            <div onclick="showTab('dashboard')"><i class="fa fa-chart-line"></i> Dashboard</div>
             <div onclick="showTab('logs')"><i class="fa fa-database"></i> Logs</div>
             <div onclick="showTab('kafka')"><i class="fa fa-bolt"></i> Kafka</div>
             <div onclick="showTab('settings')"><i class="fa fa-cog"></i> Settings</div>
@@ -126,62 +165,53 @@
     <div class="main">
 
         <div class="topbar">
-            <h2>Live Log Dashboard</h2>
-            <button class="btn" onclick="loadLogs()">Refresh</button>
+            <div class="title">LogStreamX Dashboard</div>
+            <button class="btn" onclick="loadLogs()">
+                <i class="fa fa-refresh"></i> Refresh
+            </button>
         </div>
 
         <!-- DASHBOARD -->
-        <div id="dashboardTab">
+        <div id="dashboard" class="grid">
 
-            <div class="grid">
-
-                <div class="card">
-                    <h3>Live Logs</h3>
-                    <div class="logs" id="logs"></div>
-                    <p id="emptyState" style="color:#94a3b8; display:none;">No logs found</p>
-                </div>
-
-                <div>
-
-                    <div class="card">
-                        <h3>Stats</h3>
-
-                        <div class="stat">
-                            <span>Total Logs</span>
-                            <b id="total">0</b>
-                        </div>
-
-                        <div class="stat">
-                            <span>Kafka</span>
-                            <b>Active</b>
-                        </div>
-
-                        <div class="stat">
-                            <span>Worker</span>
-                            <b>Running</b>
-                        </div>
-                    </div>
-
-                    <div class="card" style="margin-top:15px;">
-                        <h3>Trend</h3>
-                        <canvas id="chart"></canvas>
-                    </div>
-
-                </div>
+            <!-- LOGS -->
+            <div class="card">
+                <h3>Live Logs</h3>
+                <div class="logs" id="logs"></div>
             </div>
 
-        </div>
+            <!-- STATS -->
+            <div>
 
-        <!-- LOGS TAB -->
-        <div id="logsTab" style="display:none">
-            <div class="card">
-                <h3>All Logs</h3>
-                <div id="logsFull"></div>
+                <div class="card">
+                    <h3>Stats</h3>
+
+                    <div class="stat">
+                        <span><i class="fa fa-database"></i> Total Logs</span>
+                        <b id="total">0</b>
+                    </div>
+
+                    <div class="stat">
+                        <span><i class="fa fa-bolt"></i> Kafka</span>
+                        <span class="badge">Active</span>
+                    </div>
+
+                    <div class="stat">
+                        <span><i class="fa fa-server"></i> Worker</span>
+                        <span class="badge">Running</span>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:15px;">
+                    <h3>Log Trend</h3>
+                    <canvas id="chart"></canvas>
+                </div>
+
             </div>
         </div>
 
         <!-- KAFKA TAB -->
-        <div id="kafkaTab" style="display:none">
+        <div id="kafka" style="display:none;">
             <div class="card">
                 <h3>Kafka Status</h3>
                 <p>✅ Connected</p>
@@ -189,7 +219,7 @@
         </div>
 
         <!-- SETTINGS TAB -->
-        <div id="settingsTab" style="display:none">
+        <div id="settings" style="display:none;">
             <div class="card">
                 <h3>Settings</h3>
                 <p>No settings yet</p>
@@ -200,28 +230,33 @@
 
     <script>
 
-        const API_BASE =
-            window.location.hostname === "localhost"
-                ? "http://localhost:5191"
-                : "https://YOUR-RENDER-URL.onrender.com";
-
         let chart;
 
         function showTab(tab) {
+            document.getElementById("dashboard").style.display = "none";
+            document.getElementById("kafka").style.display = "none";
+            document.getElementById("settings").style.display = "none";
 
-            document.querySelectorAll('[id$="Tab"]').forEach(t => t.style.display = "none");
-
-            document.getElementById(tab + "Tab").style.display = "block";
+            if (tab === "dashboard") document.getElementById("dashboard").style.display = "grid";
+            if (tab === "kafka") document.getElementById("kafka").style.display = "block";
+            if (tab === "settings") document.getElementById("settings").style.display = "block";
         }
 
+        /* SAFE API CALL */
         async function loadLogs() {
-
             try {
-                const res = await fetch(`${API_BASE}/api/logs`);
+                const res = await fetch('/api/logs');
 
-                if (!res.ok) throw new Error("API Error " + res.status);
+                if (!res.ok) {
+                    document.getElementById("logs").innerHTML =
+                        `<div style="color:red">API Error ${res.status}</div>`;
+                    return;
+                }
 
-                const data = await res.json();
+                const text = await res.text();
+                let data = JSON.parse(text);
+
+                if (!Array.isArray(data)) data = [];
 
                 document.getElementById("total").innerText = data.length;
 
@@ -229,45 +264,38 @@
                 let labels = [];
                 let counts = [];
 
-                if (!data || data.length === 0) {
-                    document.getElementById("emptyState").style.display = "block";
-                    return;
-                } else {
-                    document.getElementById("emptyState").style.display = "none";
-                }
-
                 data.forEach((x, i) => {
 
-                    let msg = x.message || "No message";
-                    let time = x.createdAt ? new Date(x.createdAt) : new Date();
+                    let time = x.createdAt
+                        ? new Date(x.createdAt).toLocaleString()
+                        : "Invalid";
 
-                    labels.push(time.toLocaleTimeString());
+                    labels.push(time);
                     counts.push(i + 1);
 
                     html += `
-                <div class="log">
-                    <div><b>${msg}</b></div>
-                    <div class="meta">
-                        <span>${x.eventId || "-"}</span>
-                        <span>${time.toLocaleString()}</span>
+                    <div class="log">
+                        <div class="log-title">${x.message ?? "No message"}</div>
+                        <div class="meta">
+                            <span>${x.eventId ?? "N/A"}</span>
+                            <span>${time}</span>
+                        </div>
                     </div>
-                </div>`;
+                `;
                 });
 
                 document.getElementById("logs").innerHTML = html;
-                document.getElementById("logsFull").innerHTML = html;
 
                 drawChart(labels, counts);
 
             } catch (err) {
                 console.error(err);
                 document.getElementById("logs").innerHTML =
-                    "<p style='color:red'>API not reachable</p>";
+                    `<div style="color:red">UI Error loading logs</div>`;
             }
         }
 
         function drawChart(labels, data) {
-
             const ctx = document.getElementById('chart');
 
             if (chart) chart.destroy();
@@ -279,12 +307,14 @@
                     datasets: [{
                         label: 'Logs',
                         data: data,
-                        borderColor: '#38bdf8'
+                        borderColor: '#38bdf8',
+                        tension: 0.4
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { display: false } }
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: false } }
                 }
             });
         }

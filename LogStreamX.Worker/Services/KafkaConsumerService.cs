@@ -1,8 +1,6 @@
 ﻿using Confluent.Kafka;
-using LogStreamX.Contracts;
 using LogStreamX.Infrastructure.Data;
 using LogStreamX.Infrastructure.Models;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -11,82 +9,55 @@ namespace LogStreamX.Worker.Services
 {
     public class KafkaConsumerService
     {
-        private readonly IConfiguration _configuration;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<KafkaConsumerService> _logger;
+        private readonly string _topic;
 
         public KafkaConsumerService(
-            IConfiguration configuration,
             IServiceScopeFactory scopeFactory,
-            ILogger<KafkaConsumerService> logger)
+            ILogger<KafkaConsumerService> logger,
+            IConfiguration config)
         {
-            _configuration = configuration;
             _scopeFactory = scopeFactory;
             _logger = logger;
+            _topic = config["Kafka:Topic"]!;
         }
 
-        public async Task StartConsuming(CancellationToken cancellationToken)
+        // ✅ MUST BE PUBLIC (THIS FIXES YOUR ERROR)
+        public void StartConsuming(CancellationToken cancellationToken)
         {
             var config = new ConsumerConfig
             {
-                BootstrapServers = _configuration["Kafka:BootstrapServers"],
-                GroupId = _configuration["Kafka:GroupId"],
+                BootstrapServers = "your-bootstrap",
+                GroupId = "logstreamx-worker-group",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-
                 SecurityProtocol = SecurityProtocol.SaslSsl,
                 SaslMechanism = SaslMechanism.Plain,
-                SaslUsername = _configuration["Kafka:ApiKey"],
-                SaslPassword = _configuration["Kafka:ApiSecret"]
+                SaslUsername = "YOUR_API_KEY",
+                SaslPassword = "YOUR_API_SECRET"
             };
 
             using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
-            consumer.Subscribe(_configuration["Kafka:Topic"]); // logs-topic
+            consumer.Subscribe(_topic);
 
             _logger.LogInformation("🔥 Kafka Consumer started...");
 
-            try
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
+                var cr = consumer.Consume(cancellationToken);
+
+                var log = JsonSerializer.Deserialize<LogEntry>(cr.Message.Value);
+
+                if (log != null)
                 {
-                    var result = consumer.Consume(cancellationToken);
-                    var message = result?.Message?.Value;
+                    using var scope = _scopeFactory.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<LogDbContext>();
 
-                    if (string.IsNullOrWhiteSpace(message))
-                        continue;
+                    db.LogEntries.Add(log);
+                    db.SaveChanges();
 
-                    _logger.LogInformation($"📩 Received: {message}");
-
-                    try
-                    {
-                        var log = JsonSerializer.Deserialize<LogEvent>(message);
-
-                        if (log == null)
-                            continue;
-
-                        using var scope = _scopeFactory.CreateScope();
-                        var db = scope.ServiceProvider.GetRequiredService<LogDbContext>();
-
-                        db.LogEntries.Add(new LogEntry
-                        {
-                            EventId = log.EventId,
-                            Message = log.Message,
-                            CreatedAt = log.CreatedAt,
-                            Source = "kafka"
-                        });
-
-                        await db.SaveChangesAsync(cancellationToken);
-
-                        _logger.LogInformation("✅ Saved to DB");
-                    }
-                    catch (JsonException)
-                    {
-                        _logger.LogWarning($"⚠️ Skipped non-JSON: {message}");
-                    }
+                    _logger.LogInformation("✅ Saved to DB");
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogInformation("🛑 Kafka stopped.");
             }
         }
     }

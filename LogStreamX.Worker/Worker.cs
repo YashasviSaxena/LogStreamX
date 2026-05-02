@@ -1,20 +1,19 @@
-﻿using LogStreamX.Worker.Services;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
+using LogStreamX.Worker.Services;
 
-namespace LogStreamX.Worker
+public class Worker : BackgroundService
 {
-    public class Worker : BackgroundService
+    private readonly KafkaConsumerService _kafka;
+
+    public Worker(KafkaConsumerService kafka)
     {
-        private readonly KafkaConsumerService _service;
+        _kafka = kafka;
+    }
 
-        public Worker(KafkaConsumerService service)
-        {
-            _service = service;
-        }
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            await _service.StartConsuming(stoppingToken);
-        }
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        // ❌ NO StartAsync / private calls
+        _kafka.StartConsuming(stoppingToken);
+        return Task.CompletedTask;
     }
 }

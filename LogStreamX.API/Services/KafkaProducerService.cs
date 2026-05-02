@@ -1,8 +1,7 @@
 ﻿using Confluent.Kafka;
 using Microsoft.Extensions.Configuration;
-using System.Text.Json;
 
-namespace LogStreamX.API.Services
+namespace LogStreamX.Worker.Services
 {
     public class KafkaProducerService
     {
@@ -11,33 +10,23 @@ namespace LogStreamX.API.Services
 
         public KafkaProducerService(IConfiguration config)
         {
-            var bootstrap = config["Kafka:BootstrapServers"] ?? "";
-            var apiKey = config["Kafka:ApiKey"] ?? "";
-            var apiSecret = config["Kafka:ApiSecret"] ?? "";
-
-            _topic = config["Kafka:Topic"] ?? "logs-topic";
-
-            var conf = new ProducerConfig
+            var kafkaConfig = new ProducerConfig
             {
-                BootstrapServers = bootstrap,
+                BootstrapServers = config["Kafka:BootstrapServers"],
                 SecurityProtocol = SecurityProtocol.SaslSsl,
                 SaslMechanism = SaslMechanism.Plain,
-                SaslUsername = apiKey,
-                SaslPassword = apiSecret
+                SaslUsername = config["Kafka:ApiKey"],
+                SaslPassword = config["Kafka:ApiSecret"]
             };
 
-            _producer = new ProducerBuilder<Null, string>(conf).Build();
+            _producer = new ProducerBuilder<Null, string>(kafkaConfig).Build();
+            _topic = config["Kafka:Topic"]!;
         }
 
-        // ✅ FINAL METHOD NAME (USE THIS EVERYWHERE)
-        public async Task SendMessageAsync(object log)
+        public async Task SendMessageAsync(string message)
         {
-            var json = JsonSerializer.Serialize(log);
-
-            await _producer.ProduceAsync(_topic, new Message<Null, string>
-            {
-                Value = json
-            });
+            await _producer.ProduceAsync(_topic,
+                new Message<Null, string> { Value = message });
         }
     }
 }

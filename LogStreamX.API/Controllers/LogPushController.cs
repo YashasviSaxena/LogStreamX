@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using LogStreamX.API.Services;
+﻿using Confluent.Kafka;
 using LogStreamX.Contracts;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace LogStreamX.API.Controllers
 {
@@ -8,22 +9,33 @@ namespace LogStreamX.API.Controllers
     [Route("api/[controller]")]
     public class LogPushController : ControllerBase
     {
-        private readonly KafkaProducerService _kafka;
+        private readonly IConfiguration _config;
 
-        public LogPushController(KafkaProducerService kafka)
+        public LogPushController(IConfiguration config)
         {
-            _kafka = kafka;
+            _config = config;
         }
 
         [HttpPost]
-        public async Task<IActionResult> PushLog([FromBody] LogEvent request)
+        public async Task<IActionResult> Push(LogEvent log)
         {
-            if (request == null)
-                return BadRequest("Invalid request");
+            var producerConfig = new ProducerConfig
+            {
+                BootstrapServers = _config["Kafka:BootstrapServers"],
+                SecurityProtocol = SecurityProtocol.SaslSsl,
+                SaslMechanism = SaslMechanism.Plain,
+                SaslUsername = _config["Kafka:ApiKey"],
+                SaslPassword = _config["Kafka:ApiSecret"]
+            };
 
-            await _kafka.SendMessageAsync(request);
+            using var producer = new ProducerBuilder<Null, string>(producerConfig).Build();
 
-            return Ok("✅ Sent to Kafka");
+            var message = JsonSerializer.Serialize(log);
+
+            await producer.ProduceAsync(_config["Kafka:Topic"],
+                new Message<Null, string> { Value = message });
+
+            return Ok("Sent to Kafka");
         }
     }
 }
