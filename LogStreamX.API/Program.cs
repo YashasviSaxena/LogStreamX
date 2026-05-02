@@ -1,62 +1,41 @@
 ﻿using LogStreamX.API.Services;
-using LogStreamX.Infrastructure;
+using LogStreamX.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================= SERVICES =================
+// ✅ Add DB
+builder.Services.AddDbContext<LogDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddControllers();
-
-// DB
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
-
-// Kafka
+// ✅ Add Kafka Producer
 builder.Services.AddSingleton<KafkaProducerService>();
 
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-
-// Swagger (IMPORTANT)
+// ✅ Controllers + Swagger
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
-
-// ================= PIPELINE ORDER (CRITICAL) =================
-
-// ⚡ Swagger MUST be first (after build)
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+// ✅ CORS (important for UI)
+builder.Services.AddCors(options =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogStreamX.API v1");
-    c.RoutePrefix = "swagger"; // explicit
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
-// CORS
+var app = builder.Build();
+
 app.UseCors("AllowAll");
 
-// Static UI
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
-app.UseRouting();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseAuthorization();
 
 app.MapControllers();
 
-// fallback UI
-app.MapFallbackToFile("index.html");
+// ✅ Serve UI (index.html)
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.Run();

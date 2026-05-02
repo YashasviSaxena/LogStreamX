@@ -1,42 +1,29 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using LogStreamX.Infrastructure;
-using LogStreamX.API.Models;
 using LogStreamX.API.Services;
+using LogStreamX.Contracts;
 
 namespace LogStreamX.API.Controllers
 {
     [ApiController]
-    [Route("api/logpush")]
+    [Route("api/[controller]")]
     public class LogPushController : ControllerBase
     {
         private readonly KafkaProducerService _kafka;
-        private readonly AppDbContext _db;
 
-        public LogPushController(KafkaProducerService kafka, AppDbContext db)
+        public LogPushController(KafkaProducerService kafka)
         {
             _kafka = kafka;
-            _db = db;
         }
 
-        [HttpPost("push")]
-        public async Task<IActionResult> Push([FromBody] LogDto dto)
+        [HttpPost]
+        public async Task<IActionResult> PushLog([FromBody] LogEvent request)
         {
-            // send to kafka
-            await _kafka.SendMessage(System.Text.Json.JsonSerializer.Serialize(dto));
+            if (request == null)
+                return BadRequest("Invalid request");
 
-            // ✅ SAVE CLEAN DATA ONLY (IMPORTANT FIX)
-            var log = new LogEntry
-            {
-                EventId = dto.EventId,
-                Message = dto.Message,
-                CreatedAt = dto.CreatedAt,
-                Source = "kafka"
-            };
+            await _kafka.SendMessageAsync(request);
 
-            _db.LogEntries.Add(log);
-            await _db.SaveChangesAsync();
-
-            return Ok(new { status = "sent + saved" });
+            return Ok("✅ Sent to Kafka");
         }
     }
 }

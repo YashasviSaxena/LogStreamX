@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using LogStreamX.Infrastructure.Models;
 
 namespace LogStreamX.Infrastructure.Data
 {
@@ -9,6 +10,6 @@ namespace LogStreamX.Infrastructure.Data
         {
         }
 
-        public DbSet<LogEntry> LogEntries { get; set; }
+        public DbSet<LogEntry> LogEntries { get; set; } = null!;
     }
 }

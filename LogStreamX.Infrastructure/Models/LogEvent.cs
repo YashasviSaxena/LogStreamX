@@ -2,7 +2,7 @@
 
 public class LogEvent
 {
-    public string EventId { get; set; }
-    public string Message { get; set; }
+    public string EventId { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }

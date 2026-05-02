@@ -1,48 +1,43 @@
 ﻿using Confluent.Kafka;
 using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
 namespace LogStreamX.API.Services
 {
     public class KafkaProducerService
     {
         private readonly IProducer<Null, string> _producer;
-        private readonly string _topic = "logs-topic";
+        private readonly string _topic;
 
         public KafkaProducerService(IConfiguration config)
         {
-            var bootstrapServers = config["Kafka:BootstrapServers"] ?? "localhost:9092";
+            var bootstrap = config["Kafka:BootstrapServers"] ?? "";
+            var apiKey = config["Kafka:ApiKey"] ?? "";
+            var apiSecret = config["Kafka:ApiSecret"] ?? "";
 
-            var producerConfig = new ProducerConfig
+            _topic = config["Kafka:Topic"] ?? "logs-topic";
+
+            var conf = new ProducerConfig
             {
-                BootstrapServers = bootstrapServers,
-
-                // 🔥 SAFE DEFAULTS (works local + cloud)
-                Acks = Acks.All,
-                EnableIdempotence = true
+                BootstrapServers = bootstrap,
+                SecurityProtocol = SecurityProtocol.SaslSsl,
+                SaslMechanism = SaslMechanism.Plain,
+                SaslUsername = apiKey,
+                SaslPassword = apiSecret
             };
 
-            _producer = new ProducerBuilder<Null, string>(producerConfig).Build();
+            _producer = new ProducerBuilder<Null, string>(conf).Build();
         }
 
-        public async Task SendMessage(string message)
+        // ✅ FINAL METHOD NAME (USE THIS EVERYWHERE)
+        public async Task SendMessageAsync(object log)
         {
-            if (string.IsNullOrWhiteSpace(message))
-                return;
+            var json = JsonSerializer.Serialize(log);
 
-            try
+            await _producer.ProduceAsync(_topic, new Message<Null, string>
             {
-                var result = await _producer.ProduceAsync(_topic,
-                    new Message<Null, string>
-                    {
-                        Value = message
-                    });
-
-                Console.WriteLine($"Kafka sent: {result.TopicPartitionOffset}");
-            }
-            catch (ProduceException<Null, string> ex)
-            {
-                Console.WriteLine($"Kafka error: {ex.Error.Reason}");
-            }
+                Value = json
+            });
         }
     }
 }

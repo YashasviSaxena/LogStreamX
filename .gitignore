@@ -1,17 +1,8 @@
-# Visual Studio
-.vs/
-
-# Build results
 bin/
 obj/
-
-# User-specific files
+.vs/
 *.user
 *.suo
-
-# Logs
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
+appsettings.Development.json
+.env
+node_modules/

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using LogStreamX.Infrastructure.Models;
 
-
-namespace LogStreamX.Infrastructure
+namespace LogStreamX.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {
@@ -10,13 +10,6 @@ namespace LogStreamX.Infrastructure
         {
         }
 
-        public DbSet<LogEntry> LogEntries { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<LogEntry>()
-                .HasIndex(x => x.EventId)
-                .IsUnique();
-        }
+        public DbSet<LogEntry> LogEntries { get; set; } = null!;
     }
 }

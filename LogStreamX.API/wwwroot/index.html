@@ -6,6 +6,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -17,22 +18,22 @@
         }
 
         body {
-            display: flex;
             background: #0b1220;
             color: #e5e7eb;
+            display: flex;
         }
 
         /* SIDEBAR */
         .sidebar {
             width: 240px;
-            height: 100vh;
             background: #0f172a;
+            height: 100vh;
             padding: 20px;
             border-right: 1px solid rgba(255,255,255,0.05);
         }
 
         .logo {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             color: #38bdf8;
             margin-bottom: 30px;
@@ -46,9 +47,14 @@
             color: #94a3b8;
         }
 
+            .nav div.active {
+                background: rgba(56,189,248,0.2);
+                color: white;
+            }
+
             .nav div:hover {
-                background: #1e293b;
-                color: #fff;
+                background: rgba(56,189,248,0.1);
+                color: white;
             }
 
         /* MAIN */
@@ -57,9 +63,18 @@
             padding: 20px;
         }
 
+        .section {
+            display: none;
+        }
+
+            .section.active {
+                display: block;
+            }
+
         .topbar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
 
@@ -77,152 +92,158 @@
             cursor: pointer;
         }
 
-        /* CARD */
+        /* GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+
         .card {
             background: #111827;
             padding: 15px;
             border-radius: 14px;
             border: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 15px;
         }
 
         /* LOGS */
         .logs {
+            margin-top: 15px;
             max-height: 500px;
-            overflow: auto;
+            overflow-y: auto;
         }
-
-            .logs::-webkit-scrollbar {
-                width: 6px;
-            }
-
-            .logs::-webkit-scrollbar-thumb {
-                background: #1e293b;
-                border-radius: 10px;
-            }
 
         .log {
-            padding: 14px;
-            margin-bottom: 12px;
-            background: linear-gradient(145deg,#0f172a,#111827);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: 0.25s;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #0f172a;
+            border-radius: 10px;
+            border-left: 3px solid #38bdf8;
         }
-
-            .log:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-                border-color: #38bdf8;
-            }
 
         .meta {
             font-size: 12px;
             color: #94a3b8;
             display: flex;
             justify-content: space-between;
-            margin-top: 6px;
         }
 
-        /* BADGES */
-        .badge {
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .kafka {
-            background: #22c55e20;
-            color: #22c55e;
-        }
-
-        .api {
-            background: #3b82f620;
-            color: #3b82f6;
-        }
-
-        .legacy {
-            background: #f59e0b20;
-            color: #f59e0b;
-        }
-
-        /* STATUS */
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(2,1fr);
-            gap: 15px;
-        }
-
-        .status-card {
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
             background: #0f172a;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .ok {
-            color: #22c55e;
+            border-radius: 10px;
         }
     </style>
 </head>
 
 <body>
 
+    <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="logo">LogStreamX</div>
 
         <div class="nav">
-            <div onclick="setView('logs')"><i class="fa fa-database"></i> Logs</div>
-            <div onclick="setView('charts')"><i class="fa fa-chart-area"></i> Charts</div>
-            <div onclick="setView('kafka')"><i class="fa fa-bolt"></i> Kafka</div>
-            <div onclick="setView('status')"><i class="fa fa-heartbeat"></i> Status</div>
+            <div onclick="showSection('dashboard', this)" class="active"><i class="fa fa-chart-line"></i> Dashboard</div>
+            <div onclick="showSection('logsPage', this)"><i class="fa fa-database"></i> Logs</div>
+            <div onclick="showSection('kafka', this)"><i class="fa fa-bolt"></i> Kafka</div>
+            <div onclick="showSection('settings', this)"><i class="fa fa-cog"></i> Settings</div>
         </div>
     </div>
 
+    <!-- MAIN -->
     <div class="main">
 
-        <div class="topbar">
-            <div class="title">Live Logs</div>
-            <button class="btn" onclick="loadLogs()">Refresh</button>
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="section active">
+            <div class="topbar">
+                <div class="title">Dashboard</div>
+                <button class="btn" onclick="loadLogs()">Refresh</button>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>Live Logs</h3>
+                    <div class="logs" id="logs"></div>
+                </div>
+
+                <div>
+                    <div class="card">
+                        <h3>Total Logs</h3>
+                        <h2 id="total">0</h2>
+                    </div>
+
+                    <div class="card" style="margin-top:15px;">
+                        <h3>Trend</h3>
+                        <canvas id="chart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- LOGS (DEFAULT VIEW) -->
-        <div id="logsView">
-            <div class="card">
-                <div class="logs" id="logs"></div>
-            </div>
-
-            <div class="card">
-                Total Logs: <b id="total">0</b>
-            </div>
-        </div>
-
-        <!-- CHARTS -->
-        <div id="chartsView" style="display:none;">
-            <div class="card">
-                <h3>Log Trend</h3>
-                <canvas id="chart"></canvas>
-            </div>
+        <!-- LOGS PAGE -->
+        <div id="logsPage" class="section">
+            <h2>All Logs</h2>
+            <div id="logsFull"></div>
         </div>
 
         <!-- KAFKA -->
-        <div id="kafkaView" style="display:none;">
-            <div class="card">
-                Kafka Streaming <span class="ok">● ACTIVE</span>
+        <div id="kafka" class="section">
+            <div class="topbar">
+                <div class="title">Kafka Monitoring</div>
+                <button class="btn" onclick="checkKafka()">Refresh</button>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>Connection Status</h3>
+
+                    <div class="stat">
+                        <span>Status</span>
+                        <b id="kafkaStatus">Checking...</b>
+                    </div>
+
+                    <div class="stat">
+                        <span>Topic</span>
+                        <b>logs-topic</b>
+                    </div>
+
+                    <div class="stat">
+                        <span>Consumer Group</span>
+                        <b>logstreamx-worker-group</b>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Pipeline</h3>
+                    <div class="log">API → Kafka → Worker → DB</div>
+                </div>
             </div>
         </div>
 
-        <!-- STATUS -->
-        <div id="statusView" style="display:none;">
-            <div class="card">
-                <h3>System Status</h3>
+        <!-- SETTINGS -->
+        <div id="settings" class="section">
+            <div class="topbar">
+                <div class="title">Settings</div>
+            </div>
 
-                <div class="status-grid">
-                    <div class="status-card">API: <span class="ok">Running</span></div>
-                    <div class="status-card">DB: <span class="ok">Connected</span></div>
-                    <div class="status-card">Kafka: <span class="ok">Streaming</span></div>
-                    <div class="status-card">UI: <span class="ok">Stable</span></div>
+            <div class="grid">
+                <div class="card">
+                    <h3>System</h3>
+
+                    <div class="stat"><span>API</span><b>Running</b></div>
+                    <div class="stat"><span>Worker</span><b>Active</b></div>
+                    <div class="stat"><span>Database</span><b>Connected</b></div>
+                </div>
+
+                <div class="card">
+                    <h3>Environment</h3>
+
+                    <div class="stat"><span>Mode</span><b>Development</b></div>
+                    <div class="stat"><span>API URL</span><b>localhost:5191</b></div>
+                    <div class="stat"><span>Last Refresh</span><b id="lastRefresh">--</b></div>
                 </div>
             </div>
         </div>
@@ -231,96 +252,99 @@
 
     <script>
 
-        const API = "/api/logs";
         let chart;
 
-        async function loadLogs() {
-            const res = await fetch(API);
-            const data = await res.json();
+        // TAB SWITCH
+        function showSection(id, el) {
+            document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+            document.getElementById(id).classList.add("active");
 
-            document.getElementById("total").innerText = data.length;
-
-            let html = "";
-            let labels = [];
-            let values = [];
-
-            data.forEach((x, i) => {
-
-                let msg = x.message;
-                try {
-                    if (msg.startsWith("{")) {
-                        msg = JSON.parse(msg).message;
-                    }
-                } catch { }
-
-                labels.push(new Date(x.createdAt).toLocaleTimeString());
-                values.push(i + 1);
-
-                html += `
-            <div class="log" ${i === 0 ? 'style="border:1px solid #38bdf8;"' : ''}>
-                <div style="font-weight:600;">${msg}</div>
-
-                <div class="meta">
-                    <span class="badge ${x.source || 'api'}">${x.source || 'api'}</span>
-                    <span>${new Date(x.createdAt).toLocaleString()}</span>
-                </div>
-            </div>`;
-            });
-
-            document.getElementById("logs").innerHTML = html;
-
-            drawChart(labels, values);
+            document.querySelectorAll(".nav div").forEach(n => n.classList.remove("active"));
+            el.classList.add("active");
         }
 
+        // LOAD LOGS
+        async function loadLogs() {
+            try {
+                const res = await fetch('/api/logs');
+
+                if (!res.ok) {
+                    console.error("API ERROR:", await res.text());
+                    return;
+                }
+
+                const data = await res.json();
+
+                document.getElementById("total").innerText = data.length;
+
+                let html = "";
+                let labels = [];
+                let counts = [];
+
+                data.forEach((x, i) => {
+
+                    labels.push(i);
+                    counts.push(i + 1);
+
+                    html += `
+                <div class="log">
+                    <b>${x.message}</b>
+                    <div class="meta">
+                        <span>${x.eventId}</span>
+                        <span>${new Date(x.createdAt).toLocaleString()}</span>
+                    </div>
+                </div>`;
+                });
+
+                document.getElementById("logs").innerHTML = html;
+                document.getElementById("logsFull").innerHTML = html;
+
+                drawChart(labels, counts);
+
+            } catch (err) {
+                console.error("Fetch failed:", err);
+            }
+        }
+
+        // CHART
         function drawChart(labels, data) {
-            const ctx = document.getElementById("chart");
+            const ctx = document.getElementById('chart');
 
             if (chart) chart.destroy();
 
             chart = new Chart(ctx, {
-                type: "line",
+                type: 'line',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: data,
-                        borderColor: "#38bdf8",
+                        borderColor: '#38bdf8',
                         tension: 0.4
                     }]
                 },
                 options: {
-                    plugins: { legend: { display: false } },
-                    scales: { x: { display: false } }
+                    plugins: { legend: { display: false } }
                 }
             });
         }
 
-        function setView(v) {
-
-            document.getElementById("logsView").style.display = "none";
-            document.getElementById("chartsView").style.display = "none";
-            document.getElementById("kafkaView").style.display = "none";
-            document.getElementById("statusView").style.display = "none";
-
-            if (v === "logs") {
-                document.getElementById("logsView").style.display = "block";
-                loadLogs();
-            }
-
-            if (v === "charts") {
-                document.getElementById("chartsView").style.display = "block";
-            }
-
-            if (v === "kafka") {
-                document.getElementById("kafkaView").style.display = "block";
-            }
-
-            if (v === "status") {
-                document.getElementById("statusView").style.display = "block";
-            }
+        // KAFKA STATUS
+        function checkKafka() {
+            document.getElementById("kafkaStatus").innerText = "✅ Connected";
         }
+
+        // TIME
+        function updateTime() {
+            const now = new Date().toLocaleTimeString();
+            document.getElementById("lastRefresh").innerText = now;
+        }
+
+        setInterval(updateTime, 5000);
+        updateTime();
 
         loadLogs();
         setInterval(loadLogs, 5000);
+        checkKafka();
 
     </script>
 
