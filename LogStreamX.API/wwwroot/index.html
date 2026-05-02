@@ -126,9 +126,10 @@
         }
 
         .badge {
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 8px;
             background: #1e293b;
+            color: #38bdf8;
             font-size: 12px;
         }
     </style>
@@ -156,7 +157,7 @@
             <button class="btn" onclick="loadData()">Refresh</button>
         </div>
 
-        <!-- DASHBOARD VIEW -->
+        <!-- DASHBOARD -->
         <div id="dashboardView">
 
             <div class="grid">
@@ -164,7 +165,7 @@
                 <div>
 
                     <div class="card">
-                        <h3>Log Overview</h3>
+                        <h3>Log Trend</h3>
                         <canvas id="chart"></canvas>
                     </div>
 
@@ -203,7 +204,7 @@
 
         </div>
 
-        <!-- LOGS VIEW -->
+        <!-- LOGS -->
         <div id="logsView" style="display:none;">
             <div class="card">
                 <h3>All Logs</h3>
@@ -211,19 +212,60 @@
             </div>
         </div>
 
-        <!-- KAFKA VIEW -->
+        <!-- KAFKA -->
         <div id="kafkaView" style="display:none;">
             <div class="card">
                 <h3>Kafka Status</h3>
-                <p>Connected to Confluent Cloud ⚡</p>
+                <div class="stat"><span>Broker</span><b>Confluent Cloud</b></div>
+                <div class="stat"><span>Topic</span><b>logs-topic</b></div>
+                <div class="stat"><span>Group</span><b>logstreamx-worker-group</b></div>
             </div>
         </div>
 
-        <!-- SETTINGS VIEW -->
+        <!-- SETTINGS -->
         <div id="settingsView" style="display:none;">
             <div class="card">
-                <h3>Settings</h3>
-                <p>Configuration panel coming soon ⚙</p>
+                <h3>⚙ System Configuration</h3>
+
+                <div class="stat">
+                    <span>Environment</span>
+                    <b>Production</b>
+                </div>
+
+                <div class="stat">
+                    <span>API Status</span>
+                    <span class="badge">Running</span>
+                </div>
+
+                <div class="stat">
+                    <span>Database</span>
+                    <span class="badge">Connected</span>
+                </div>
+
+                <div class="stat">
+                    <span>Kafka</span>
+                    <span class="badge">Active</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔗 System Info</h3>
+
+                <div class="stat">
+                    <span>API Base</span>
+                    <b id="apiBase"></b>
+                </div>
+
+                <div class="stat">
+                    <span>Logs Endpoint</span>
+                    <b>/api/logs</b>
+                </div>
+
+                <div class="stat">
+                    <span>Health Check</span>
+                    <b>/debug-db</b>
+                </div>
+
             </div>
         </div>
 
@@ -235,7 +277,7 @@
 
         let chart;
 
-        // ================= TAB SWITCH =================
+        // ================= TAB SYSTEM =================
         function switchTab(tab) {
 
             document.querySelectorAll(".nav div").forEach(x => x.classList.remove("active"));
@@ -251,6 +293,10 @@
             if (tab === "dashboard" || tab === "logs") {
                 loadData();
             }
+
+            if (tab === "settings") {
+                document.getElementById("apiBase").innerText = API;
+            }
         }
 
         // ================= LOAD DATA =================
@@ -265,8 +311,9 @@
 
                 document.getElementById("total").innerText = logs.length;
 
-                // DASHBOARD RECENT
-                let recent = logs.slice(0, 5).map(x => `
+                // RECENT LOGS
+                document.getElementById("recentLogs").innerHTML =
+                    logs.slice(0, 5).map(x => `
 <div class="log">
 <div>${x.message || "No message"}</div>
 <div class="meta">
@@ -274,12 +321,9 @@
 <span>${new Date(x.createdAt || Date.now()).toLocaleString()}</span>
 </div>
 </div>
-`).join("");
+`).join("") || "<div>No logs</div>";
 
-                document.getElementById("recentLogs").innerHTML =
-                    recent || "<div style='color:#94a3b8'>No logs yet</div>";
-
-                // FULL LOGS
+                // ALL LOGS
                 document.getElementById("allLogs").innerHTML =
                     logs.map(x => `
 <div class="log">
@@ -289,13 +333,13 @@
 <span>${new Date(x.createdAt || Date.now()).toLocaleString()}</span>
 </div>
 </div>
-`).join("") || "<div style='color:#94a3b8'>No logs found</div>";
+`).join("") || "<div>No logs found</div>";
 
-                // CHART DATA
-                let labels = logs.map(x => new Date(x.createdAt).toLocaleTimeString());
-                let values = logs.map((_, i) => i + 1);
-
-                drawChart(labels, values);
+                // CHART
+                drawChart(
+                    logs.map(x => new Date(x.createdAt).toLocaleTimeString()),
+                    logs.map((_, i) => i + 1)
+                );
 
             } catch (err) {
                 console.log(err);
