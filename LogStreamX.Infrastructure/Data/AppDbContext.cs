@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using LogStreamX.Infrastructure.Models;
+﻿using LogStreamX.Infrastructure.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace LogStreamX.Infrastructure.Data
 {
@@ -11,25 +11,5 @@ namespace LogStreamX.Infrastructure.Data
         }
 
         public DbSet<LogEntry> LogEntries { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<LogEntry>(entity =>
-            {
-                entity.HasKey(x => x.Id);
-
-                entity.Property(x => x.EventId)
-                    .HasMaxLength(100);
-
-                entity.Property(x => x.Message)
-                    .HasMaxLength(4000);
-
-                entity.Property(x => x.Source)
-                    .HasMaxLength(100);
-
-                entity.Property(x => x.CreatedAt)
-                    .HasDefaultValueSql("GETUTCDATE()");
-            });
-        }
     }
 }

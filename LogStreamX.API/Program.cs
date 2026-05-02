@@ -3,41 +3,47 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ===================== CONTROLLERS =====================
+// ================== CONTROLLERS ==================
 builder.Services.AddControllers();
 
-// ===================== SWAGGER =====================
+// ================== SWAGGER ==================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ===================== DB CONTEXT FIX =====================
+// ================== DB FIX (IMPORTANT) ==================
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
+    var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    if (string.IsNullOrEmpty(connStr))
-        throw new Exception("DB connection string missing");
-
-    // 🔥 FORCE SQL SERVER
-    options.UseSqlServer(connStr);
+    // FORCE SQL SERVER CORRECTLY
+    options.UseSqlServer(conn, sql =>
+    {
+        sql.EnableRetryOnFailure();
+    });
 });
 
-// ===================== CORS (IMPORTANT FOR UI) =====================
+// ================== CORS (UI FIX) ==================
 builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("AllowAll", p =>
     {
         p.AllowAnyOrigin()
-         .AllowAnyMethod()
-         .AllowAnyHeader();
+         .AllowAnyHeader()
+         .AllowAnyMethod();
     });
 });
 
 var app = builder.Build();
 
-// ===================== PIPELINE =====================
+// ================== PIPELINE ==================
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogStreamX API v1");
+    c.RoutePrefix = "swagger";
+});
+
+app.UseStaticFiles(); // IMPORTANT FOR index.html
 
 app.UseCors("AllowAll");
 
@@ -45,7 +51,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// ===================== ROOT =====================
+// ================== HEALTH ROUTE ==================
 app.MapGet("/", () => "LogStreamX API Running 🚀");
 
 app.Run();
