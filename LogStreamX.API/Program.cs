@@ -3,26 +3,32 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================== CONTROLLERS ==================
+// ================= CONTROLLERS =================
 builder.Services.AddControllers();
 
-// ================== SWAGGER ==================
+// ================= SWAGGER =================
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "LogStreamX API",
+        Version = "v1",
+        Description = "Production Logging System"
+    });
 
-// ================== DB FIX (IMPORTANT) ==================
+    // Prevent schema crash
+    options.CustomSchemaIds(type => type.FullName);
+});
+
+// ================= DB =================
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var conn = builder.Configuration.GetConnectionString("DefaultConnection");
-
-    // FORCE SQL SERVER CORRECTLY
-    options.UseSqlServer(conn, sql =>
-    {
-        sql.EnableRetryOnFailure();
-    });
+    options.UseSqlServer(conn);
 });
 
-// ================== CORS (UI FIX) ==================
+// ================= CORS =================
 builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("AllowAll", p =>
@@ -35,7 +41,7 @@ builder.Services.AddCors(opt =>
 
 var app = builder.Build();
 
-// ================== PIPELINE ==================
+// ================= PIPELINE ORDER (IMPORTANT) =================
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -43,15 +49,14 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-app.UseStaticFiles(); // IMPORTANT FOR index.html
-
+app.UseStaticFiles();
+app.UseRouting();
 app.UseCors("AllowAll");
-
 app.UseAuthorization();
 
 app.MapControllers();
 
-// ================== HEALTH ROUTE ==================
+// Health check
 app.MapGet("/", () => "LogStreamX API Running 🚀");
 
 app.Run();

@@ -35,16 +35,16 @@ namespace LogStreamX.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] LogEntry entry)
+        public async Task<IActionResult> Post([FromBody] LogEntry log)
         {
             try
             {
-                entry.CreatedAt = DateTime.UtcNow;
+                log.CreatedAt = DateTime.UtcNow;
 
-                _context.LogEntries.Add(entry);
+                _context.LogEntries.Add(log);
                 await _context.SaveChangesAsync();
 
-                return Ok(entry);
+                return Ok(log);
             }
             catch (Exception ex)
             {

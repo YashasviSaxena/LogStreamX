@@ -2,13 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>LogStreamX Dashboard</title>
+    <title>LogStreamX</title>
 
     <link rel="icon" href="/favicon.ico">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -20,7 +18,6 @@
             display: flex;
         }
 
-        /* SIDEBAR */
         .sidebar {
             width: 240px;
             height: 100vh;
@@ -37,18 +34,18 @@
 
         .nav div {
             padding: 12px;
-            margin: 6px 0;
+            margin-bottom: 10px;
+            border-radius: 10px;
             cursor: pointer;
-            border-radius: 8px;
             color: #94a3b8;
         }
 
-            .nav div:hover, .active {
+            .nav div.active,
+            .nav div:hover {
                 background: #1e293b;
                 color: white;
             }
 
-        /* MAIN */
         .main {
             flex: 1;
             padding: 20px;
@@ -58,62 +55,70 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .btn {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 8px;
             background: #38bdf8;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
             color: white;
             cursor: pointer;
         }
 
-        /* GRID */
+        .card {
+            background: #111827;
+            padding: 15px;
+            border-radius: 14px;
+            margin-bottom: 15px;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 15px;
         }
 
-        .card {
-            background: #111827;
-            padding: 15px;
-            border-radius: 12px;
+        .logs {
+            max-height: 420px;
+            overflow: auto;
         }
 
-        /* LOGS */
         .log {
+            padding: 12px;
             background: #0f172a;
-            padding: 10px;
-            margin: 8px 0;
             border-left: 3px solid #38bdf8;
-            border-radius: 8px;
+            margin-bottom: 10px;
+            border-radius: 10px;
         }
 
-        /* STATS */
         .stat {
             display: flex;
             justify-content: space-between;
             padding: 10px;
             background: #0f172a;
-            margin: 8px 0;
-            border-radius: 8px;
+            margin-bottom: 10px;
+            border-radius: 10px;
         }
 
         .badge {
-            background: #1e293b;
             padding: 4px 10px;
-            border-radius: 6px;
+            border-radius: 8px;
+            background: #1e293b;
             color: #38bdf8;
             font-size: 12px;
+        }
+
+        canvas {
+            width: 100%;
         }
     </style>
 </head>
 
 <body>
 
+    <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="logo">LogStreamX</div>
 
@@ -125,60 +130,86 @@
         </div>
     </div>
 
+    <!-- MAIN -->
     <div class="main">
 
         <div class="topbar">
             <h2 id="title">Dashboard</h2>
-            <button class="btn" onclick="loadLogs()">Refresh</button>
+            <button class="btn" onclick="loadData()">Refresh</button>
         </div>
 
         <!-- DASHBOARD -->
-        <div id="dashboard">
+        <div id="dashboardView">
 
             <div class="grid">
 
-                <div class="card">
-                    <h3>Log Trend</h3>
-                    <canvas id="chart"></canvas>
+                <div>
+
+                    <div class="card">
+                        <h3>📊 Log Trend</h3>
+                        <canvas id="chart"></canvas>
+                    </div>
+
+                    <div class="card">
+                        <h3>📁 Recent Logs</h3>
+                        <div class="logs" id="logs"></div>
+                    </div>
+
                 </div>
 
-                <div class="card">
-                    <h3>Stats</h3>
-                    <div class="stat"><span>Total Logs</span><b id="total">0</b></div>
-                    <div class="stat"><span>Kafka</span><span class="badge">Active</span></div>
-                    <div class="stat"><span>Worker</span><span class="badge">Running</span></div>
+                <div>
+
+                    <div class="card">
+                        <h3>📊 Stats</h3>
+
+                        <div class="stat">
+                            <span>Total Logs</span>
+                            <b id="total">0</b>
+                        </div>
+
+                        <div class="stat">
+                            <span>Kafka</span>
+                            <span class="badge">ACTIVE</span>
+                        </div>
+
+                        <div class="stat">
+                            <span>Worker</span>
+                            <span class="badge">RUNNING</span>
+                        </div>
+                    </div>
+
                 </div>
 
-            </div>
-
-            <div class="card" style="margin-top:15px;">
-                <h3>Recent Logs</h3>
-                <div id="logs"></div>
-            </div>
-
-        </div>
-
-        <!-- LOGS -->
-        <div id="logsPage" style="display:none;">
-            <div class="card">
-                <h3>All Logs</h3>
-                <div id="allLogs"></div>
-            </div>
-        </div>
-
-        <!-- KAFKA -->
-        <div id="kafkaPage" style="display:none;">
-            <div class="card">
-                <h3>Kafka Status</h3>
-                <p>Confluent Cloud → ACTIVE</p>
             </div>
         </div>
 
         <!-- SETTINGS -->
-        <div id="settingsPage" style="display:none;">
+        <div id="settingsView" style="display:none">
             <div class="card">
-                <h3>Settings</h3>
+                <h3>⚙ Settings</h3>
                 <p>Configuration panel coming soon ⚙</p>
+            </div>
+        </div>
+
+        <!-- KAFKA -->
+        <div id="kafkaView" style="display:none">
+            <div class="card">
+                <h3>⚡ Kafka Status</h3>
+
+                <div class="stat">
+                    <span>Broker</span>
+                    <b>Confluent Cloud</b>
+                </div>
+
+                <div class="stat">
+                    <span>Status</span>
+                    <span class="badge" style="color:#10b981;">ACTIVE</span>
+                </div>
+
+                <div class="stat">
+                    <span>Topic</span>
+                    <b>logs-topic</b>
+                </div>
             </div>
         </div>
 
@@ -189,22 +220,30 @@
         const API = window.location.origin;
         let chart;
 
+        // ================= TAB SWITCH =================
         function switchTab(tab) {
 
-            document.getElementById("dashboard").style.display = tab === "dashboard" ? "block" : "none";
-            document.getElementById("logsPage").style.display = tab === "logs" ? "block" : "none";
-            document.getElementById("kafkaPage").style.display = tab === "kafka" ? "block" : "none";
-            document.getElementById("settingsPage").style.display = tab === "settings" ? "block" : "none";
+            document.getElementById("dashboardView").style.display = tab === "dashboard" ? "block" : "none";
+            document.getElementById("settingsView").style.display = tab === "settings" ? "block" : "none";
+            document.getElementById("kafkaView").style.display = tab === "kafka" ? "block" : "none";
 
             document.getElementById("title").innerText = tab.toUpperCase();
 
-            loadLogs();
+            loadData();
+
         }
 
-        async function loadLogs() {
+        // ================= SAFE API LOAD =================
+        async function loadData() {
 
             try {
-                const res = await fetch(`${API}/api/Logs`);
+
+                const res = await fetch(API + "/api/logs");
+
+                if (!res.ok) {
+                    console.log("API error", res.status);
+                    return;
+                }
 
                 const text = await res.text();
 
@@ -220,23 +259,27 @@
 
                 document.getElementById("total").innerText = data.length;
 
-                const html = data.length ? data.map(x => `
-                <div class="log">
-                    <b>${x.message || "No message"}</b><br>
-                    <small>${x.eventId || "-"}</small>
-                </div>
-            `).join("") : "<p>No logs found</p>";
+                // LOGS
+                document.getElementById("logs").innerHTML =
+                    data.length > 0
+                        ? data.map(x => `
+<div class="log">
+<div>${x.message ?? "No message"}</div>
+<small>${x.eventId ?? "-"}</small>
+</div>
+`).join("")
+                        : "<div>No logs found</div>";
 
-                document.getElementById("logs").innerHTML = html;
-                document.getElementById("allLogs").innerHTML = html;
-
+                // CHART
                 drawChart(data);
 
             } catch (e) {
-                console.log("API Error", e);
+                console.log("UI error", e);
             }
+
         }
 
+        // ================= CHART =================
         function drawChart(data) {
 
             const ctx = document.getElementById("chart");
@@ -254,13 +297,16 @@
                     }]
                 },
                 options: {
-                    plugins: { legend: { display: false } }
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: false } }
                 }
             });
+
         }
 
-        loadLogs();
-        setInterval(loadLogs, 5000);
+        // INIT
+        loadData();
+        setInterval(loadData, 5000);
 
     </script>
 
