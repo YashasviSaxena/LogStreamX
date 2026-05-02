@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LogStreamX.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260502185424_Init_v1")]
-    partial class Init_v1
+    [Migration("20260502201644_InitFix")]
+    partial class InitFix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,7 +53,7 @@ namespace LogStreamX.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LogEntries");
+                    b.ToTable("LogEntries", (string)null);
                 });
 #pragma warning restore 612, 618
         }

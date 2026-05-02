@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LogStreamX.Infrastructure.Data;
-using LogStreamX.Infrastructure.Models;
 
 namespace LogStreamX.API.Controllers
 {
@@ -18,10 +17,15 @@ namespace LogStreamX.API.Controllers
 
         // GET: api/logs
         [HttpGet]
-        public async Task<IActionResult> GetLogs()
+        public async Task<IActionResult> Get()
         {
             try
             {
+                if (_context == null || _context.LogEntries == null)
+                {
+                    return Ok(new List<object>());
+                }
+
                 var logs = await _context.LogEntries
                     .OrderByDescending(x => x.CreatedAt)
                     .Take(100)
@@ -31,17 +35,18 @@ namespace LogStreamX.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
+                // NEVER crash UI again
+                return Ok(new
                 {
-                    error = "Database error",
+                    error = true,
                     message = ex.Message
                 });
             }
         }
 
-        // OPTIONAL TEST ENDPOINT
-        [HttpGet("health")]
-        public IActionResult Health()
+        // DEBUG ENDPOINT
+        [HttpGet("debug")]
+        public IActionResult Debug()
         {
             return Ok(new
             {

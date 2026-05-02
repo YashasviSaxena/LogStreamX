@@ -50,7 +50,7 @@ namespace LogStreamX.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LogEntries");
+                    b.ToTable("LogEntries", (string)null);
                 });
 #pragma warning restore 612, 618
         }

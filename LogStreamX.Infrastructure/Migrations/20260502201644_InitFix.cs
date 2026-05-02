@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LogStreamX.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Init_v1 : Migration
+    public partial class InitFix : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
