@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LogStreamX.Infrastructure.Data;
-using LogStreamX.Infrastructure.Models;
 
 namespace LogStreamX.API.Controllers
 {
@@ -16,6 +15,7 @@ namespace LogStreamX.API.Controllers
             _context = context;
         }
 
+        // GET: /api/logs
         [HttpGet]
         public async Task<IActionResult> GetLogs()
         {
@@ -27,15 +27,24 @@ namespace LogStreamX.API.Controllers
             return Ok(logs);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddLog(LogEntry log)
+        // OPTIONAL: GET single log by id
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetLog(int id)
         {
-            log.CreatedAt = DateTime.UtcNow;
+            var log = await _context.LogEntries
+                .FirstOrDefaultAsync(x => x.Id == id);
 
-            _context.LogEntries.Add(log);
-            await _context.SaveChangesAsync();
+            if (log == null)
+                return NotFound();
 
             return Ok(log);
+        }
+
+        // OPTIONAL: health check endpoint
+        [HttpGet("health")]
+        public IActionResult Health()
+        {
+            return Ok(new { status = "LogStreamX API Running 🚀" });
         }
     }
 }

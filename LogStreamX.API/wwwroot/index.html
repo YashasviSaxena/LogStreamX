@@ -2,24 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>LogStreamX Pro</title>
+    <title>LogStreamX</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
         body {
             margin: 0;
             font-family: Inter;
-            background: #0a0f1c;
+            background: #0b1220;
             color: #e5e7eb;
             display: flex;
         }
 
-        /* SIDEBAR */
         .sidebar {
             width: 240px;
             background: #0f172a;
+            height: 100vh;
             padding: 20px;
         }
 
@@ -27,65 +28,51 @@
             font-size: 20px;
             font-weight: 700;
             color: #38bdf8;
-            margin-bottom: 20px;
         }
 
-        .nav div {
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 10px;
-            cursor: pointer;
-            color: #94a3b8;
-        }
-
-            .nav div:hover {
-                background: #1e293b;
-                color: white;
-            }
-
-        /* MAIN */
         .main {
             flex: 1;
             padding: 20px;
         }
 
-        .top {
+        .topbar {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            margin-bottom: 20px;
         }
 
         .btn {
-            background: #38bdf8;
+            background: #2563eb;
             border: none;
-            padding: 10px 14px;
-            border-radius: 10px;
+            padding: 10px 12px;
+            color: white;
+            border-radius: 8px;
             cursor: pointer;
-            color: black;
-            font-weight: 600;
-        }
-
-        /* GRID */
-        .grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
         }
 
         .card {
             background: #111827;
             padding: 15px;
-            border-radius: 15px;
+            border-radius: 12px;
         }
 
-        /* LOGS */
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+
+        .logs {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
         .log {
-            padding: 12px;
-            margin: 10px 0;
             background: #0f172a;
+            padding: 10px;
+            margin-bottom: 10px;
             border-left: 3px solid #38bdf8;
-            border-radius: 10px;
+            border-radius: 8px;
         }
 
         .meta {
@@ -94,15 +81,6 @@
             display: flex;
             justify-content: space-between;
         }
-
-        .stat {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            background: #0f172a;
-            margin: 8px 0;
-            border-radius: 10px;
-        }
     </style>
 </head>
 
@@ -110,18 +88,12 @@
 
     <div class="sidebar">
         <div class="logo">LogStreamX</div>
-        <div class="nav">
-            <div><i class="fa fa-chart-line"></i> Dashboard</div>
-            <div><i class="fa fa-database"></i> Logs</div>
-            <div><i class="fa fa-bolt"></i> Kafka</div>
-            <div><i class="fa fa-cog"></i> Settings</div>
-        </div>
     </div>
 
     <div class="main">
 
-        <div class="top">
-            <h2>Live Dashboard</h2>
+        <div class="topbar">
+            <h2>Live Logs</h2>
             <button class="btn" onclick="loadLogs()">Refresh</button>
         </div>
 
@@ -129,23 +101,13 @@
 
             <div class="card">
                 <h3>Logs</h3>
-                <div id="logs"></div>
+                <div class="logs" id="logs"></div>
             </div>
 
-            <div>
-
-                <div class="card">
-                    <h3>Stats</h3>
-                    <div class="stat"><span>Total</span><b id="total">0</b></div>
-                    <div class="stat"><span>Kafka</span><b>Active</b></div>
-                    <div class="stat"><span>Worker</span><b>Running</b></div>
-                </div>
-
-                <div class="card" style="margin-top:10px;">
-                    <h3>Trend</h3>
-                    <canvas id="chart"></canvas>
-                </div>
-
+            <div class="card">
+                <h3>Stats</h3>
+                <p>Total: <b id="total">0</b></p>
+                <canvas id="chart"></canvas>
             </div>
 
         </div>
@@ -154,14 +116,13 @@
 
     <script>
 
+        const API_URL = "https://logstreamx.onrender.com/api/logs"; // IMPORTANT
+
         let chart;
 
         async function loadLogs() {
             try {
-                const res = await fetch('/api/logs');
-
-                if (!res.ok) throw new Error("API failed");
-
+                const res = await fetch(API_URL);
                 const data = await res.json();
 
                 document.getElementById("total").innerText = data.length;
@@ -171,12 +132,12 @@
                 let counts = [];
 
                 data.forEach((x, i) => {
-                    labels.push(i);
+                    labels.push(new Date(x.createdAt).toLocaleTimeString());
                     counts.push(i + 1);
 
                     html += `
                 <div class="log">
-                    <b>${x.message}</b>
+                    <div><b>${x.message}</b></div>
                     <div class="meta">
                         <span>${x.eventId}</span>
                         <span>${new Date(x.createdAt).toLocaleString()}</span>
@@ -188,8 +149,8 @@
 
                 drawChart(labels, counts);
 
-            } catch (e) {
-                console.error("UI Error:", e);
+            } catch (err) {
+                console.error("API Error:", err);
             }
         }
 
@@ -201,11 +162,16 @@
             chart = new Chart(ctx, {
                 type: "line",
                 data: {
-                    labels,
+                    labels: labels,
                     datasets: [{
-                        data,
-                        borderColor: "#38bdf8"
+                        data: data,
+                        borderColor: "#38bdf8",
+                        tension: 0.4
                     }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: false } }
                 }
             });
         }
