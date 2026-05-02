@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LogStreamX.Infrastructure.Data;
+using LogStreamX.Infrastructure.Models;
 
 namespace LogStreamX.API.Controllers
 {
@@ -18,23 +19,23 @@ namespace LogStreamX.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetLogs()
         {
-            try
-            {
-                var logs = await _context.LogEntries
-                    .OrderByDescending(x => x.CreatedAt)
-                    .Take(100)
-                    .ToListAsync();
+            var logs = await _context.LogEntries
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(100)
+                .ToListAsync();
 
-                return Ok(logs);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    error = ex.Message,
-                    inner = ex.InnerException?.Message
-                });
-            }
+            return Ok(logs);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddLog(LogEntry log)
+        {
+            log.CreatedAt = DateTime.UtcNow;
+
+            _context.LogEntries.Add(log);
+            await _context.SaveChangesAsync();
+
+            return Ok(log);
         }
     }
 }
