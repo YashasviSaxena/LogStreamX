@@ -11,7 +11,6 @@ namespace LogStreamX.Infrastructure.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<LogDbContext>();
 
-            // 👉 Point to API project (where appsettings.json exists)
             var basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "LogStreamX.API");
 
             var configuration = new ConfigurationBuilder()

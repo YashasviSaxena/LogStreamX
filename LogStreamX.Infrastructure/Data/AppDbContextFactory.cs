@@ -11,7 +11,7 @@ namespace LogStreamX.Infrastructure.Data
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
             optionsBuilder.UseSqlServer(
-                @"Server=(localdb)\MSSQLLocalDB;Database=LogStreamXDb;Trusted_Connection=True;TrustServerCertificate=True"
+                "Server=(localdb)\\MSSQLLocalDB;Database=LogStreamXDb;Trusted_Connection=True;TrustServerCertificate=True"
             );
 
             return new AppDbContext(optionsBuilder.Options);
