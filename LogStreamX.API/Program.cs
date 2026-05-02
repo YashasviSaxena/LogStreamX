@@ -3,46 +3,35 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers
 builder.Services.AddControllers();
 
-// DB
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// CORS (tightened for production)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy =>
-        {
-            policy.WithOrigins(
-                "https://your-frontend-domain.com"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowAll",
+        p => p.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod());
 });
 
 var app = builder.Build();
 
-// Middleware
-app.UseCors("AllowFrontend");
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
+// ✅ IMPORTANT: Enables favicon + UI files
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapControllers();
 
-// Health endpoint
-app.MapGet("/health", () => Results.Ok(new
-{
-    service = "LogStreamX",
-    status = "running"
-}));
-
-// Root
-app.MapGet("/", () => Results.Redirect("/health"));
+// ✅ Root
+app.MapGet("/", () =>
+    Results.Redirect("/index.html"));
 
 // Render port fix
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";

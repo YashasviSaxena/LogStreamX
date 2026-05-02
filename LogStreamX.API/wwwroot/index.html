@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>LogStreamX</title>
 
+    <!-- FAVICON FIX -->
+    <link rel="icon" href="/favicon.ico">
+
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -43,22 +46,18 @@
             margin-bottom: 30px;
         }
 
-        .nav {
-            margin-top: 20px;
+        .nav div {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #94a3b8;
         }
 
-            .nav div {
-                padding: 12px;
-                margin-bottom: 10px;
-                border-radius: 10px;
-                cursor: pointer;
-                color: #94a3b8;
+            .nav div:hover {
+                background: rgba(56,189,248,0.1);
+                color: white;
             }
-
-                .nav div:hover {
-                    background: rgba(56,189,248,0.1);
-                    color: white;
-                }
 
         /* MAIN */
         .main {
@@ -66,7 +65,6 @@
             padding: 20px;
         }
 
-        /* TOP BAR */
         .topbar {
             display: flex;
             justify-content: space-between;
@@ -88,14 +86,12 @@
             cursor: pointer;
         }
 
-        /* CARDS */
         .grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 15px;
         }
 
-        /* LOGS */
         .card {
             background: #111827;
             padding: 15px;
@@ -129,7 +125,6 @@
             justify-content: space-between;
         }
 
-        /* STATS */
         .stat {
             display: flex;
             justify-content: space-between;
@@ -138,10 +133,6 @@
             background: #0f172a;
             border-radius: 10px;
         }
-
-            .stat i {
-                color: #38bdf8;
-            }
     </style>
 </head>
 
@@ -150,7 +141,6 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="logo">LogStreamX</div>
-
         <div class="nav">
             <div><i class="fa fa-chart-line"></i> Dashboard</div>
             <div><i class="fa fa-database"></i> Logs</div>
@@ -169,16 +159,15 @@
             </button>
         </div>
 
-        <!-- GRID -->
         <div class="grid">
 
-            <!-- LEFT -->
+            <!-- LOGS -->
             <div class="card">
                 <h3>Live Logs</h3>
                 <div class="logs" id="logs"></div>
             </div>
 
-            <!-- RIGHT -->
+            <!-- STATS -->
             <div>
 
                 <div class="card">
@@ -211,10 +200,9 @@
 
     <script>
 
-        let chart;
-
-        // ✅ FIXED API BASE (production safe)
         const API_BASE = window.location.origin;
+
+        let chart;
 
         async function loadLogs() {
             try {
@@ -228,7 +216,6 @@
                 let counts = [];
 
                 data.forEach((x, i) => {
-
                     labels.push(new Date(x.createdAt).toLocaleTimeString());
                     counts.push(i + 1);
 
@@ -247,7 +234,6 @@
                 drawChart(labels, counts);
 
             } catch (err) {
-                console.error("API Error:", err);
                 document.getElementById("logs").innerHTML =
                     "<div style='color:red'>Failed to load logs</div>";
             }
@@ -281,7 +267,6 @@
             });
         }
 
-        // initial load + auto refresh
         loadLogs();
         setInterval(loadLogs, 5000);
 
