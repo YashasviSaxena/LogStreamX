@@ -1,4 +1,4 @@
-﻿using LogStreamX.Contracts;
+﻿using LogStreamX.API.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LogStreamX.API.Controllers
