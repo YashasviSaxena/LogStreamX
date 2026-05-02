@@ -5,7 +5,6 @@
     <title>LogStreamX</title>
 
     <link rel="icon" href="/favicon.ico">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -27,15 +26,15 @@
         /* SIDEBAR */
         .sidebar {
             width: 240px;
-            background: #0f172a;
             height: 100vh;
+            background: #0f172a;
             padding: 20px;
         }
 
         .logo {
             color: #38bdf8;
-            font-size: 18px;
             font-weight: 700;
+            font-size: 18px;
             margin-bottom: 25px;
         }
 
@@ -49,7 +48,7 @@
 
             .nav div:hover {
                 background: #1e293b;
-                color: #fff;
+                color: white;
             }
 
         /* MAIN */
@@ -79,6 +78,7 @@
             cursor: pointer;
         }
 
+        /* GRID */
         .grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -91,9 +91,10 @@
             border-radius: 14px;
         }
 
+        /* LOGS */
         .logs {
             margin-top: 10px;
-            max-height: 500px;
+            max-height: 450px;
             overflow: auto;
         }
 
@@ -105,19 +106,20 @@
             border-radius: 10px;
         }
 
-        .meta {
-            font-size: 12px;
-            color: #94a3b8;
-            display: flex;
-            justify-content: space-between;
+        /* EMPTY STATE */
+        .empty {
+            color: #64748b;
+            text-align: center;
+            padding: 30px;
         }
 
+        /* STATS */
         .stat {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
             padding: 10px;
             background: #0f172a;
+            margin-bottom: 10px;
             border-radius: 10px;
         }
     </style>
@@ -130,10 +132,10 @@
         <div class="logo">LogStreamX</div>
 
         <div class="nav">
-            <div onclick="showTab('dashboard')"><i class="fa fa-chart-line"></i> Dashboard</div>
-            <div onclick="showTab('logs')"><i class="fa fa-database"></i> Logs</div>
-            <div onclick="showTab('kafka')"><i class="fa fa-bolt"></i> Kafka</div>
-            <div onclick="showTab('settings')"><i class="fa fa-cog"></i> Settings</div>
+            <div onclick="showTab('dashboard')">📊 Dashboard</div>
+            <div onclick="showTab('logs')">📁 Logs</div>
+            <div onclick="showTab('kafka')">⚡ Kafka</div>
+            <div onclick="showTab('settings')">⚙ Settings</div>
         </div>
     </div>
 
@@ -147,11 +149,13 @@
 
         <div class="grid">
 
+            <!-- LOGS -->
             <div class="card">
                 <h3>Live Logs</h3>
                 <div class="logs" id="logs"></div>
             </div>
 
+            <!-- RIGHT PANEL -->
             <div>
 
                 <div class="card">
@@ -179,6 +183,7 @@
                 </div>
 
             </div>
+
         </div>
 
     </div>
@@ -186,10 +191,12 @@
     <script>
 
         const API = window.location.origin;
-        let chart;
+
+        let chart = null;
 
         // ================= TAB =================
         function showTab(tab) {
+
             const logs = document.getElementById("logs");
 
             if (tab === "dashboard" || tab === "logs") {
@@ -197,76 +204,98 @@
             }
 
             if (tab === "kafka") {
-                logs.innerHTML = "<div style='color:#38bdf8'>Kafka Connected (Confluent)</div>";
+                logs.innerHTML = "<div class='empty'>Kafka Connected 🚀</div>";
             }
 
             if (tab === "settings") {
-                logs.innerHTML = "<div style='color:#94a3b8'>Settings coming soon...</div>";
+                logs.innerHTML = "<div class='empty'>Settings Coming Soon ⚙</div>";
             }
         }
 
-        // ================= SAFE API LOAD =================
+        // ================= LOAD LOGS =================
         async function loadLogs() {
+
             try {
+
                 const res = await fetch(`${API}/api/logs`);
                 const data = await res.json();
 
-                // ✅ FIX: force array safety
-                const logsArray = Array.isArray(data) ? data : [];
+                // SAFE ARRAY CHECK
+                const logs = Array.isArray(data) ? data : [];
 
-                document.getElementById("total").innerText = logsArray.length;
+                document.getElementById("total").innerText = logs.length;
 
                 let html = "";
                 let labels = [];
-                let counts = [];
+                let values = [];
 
-                logsArray.forEach((x, i) => {
+                if (logs.length === 0) {
+                    html = "<div class='empty'>No logs found yet</div>";
+                }
+
+                logs.forEach((x, i) => {
 
                     labels.push(new Date(x.createdAt || Date.now()).toLocaleTimeString());
-                    counts.push(i + 1);
+                    values.push(i + 1);
 
                     html += `
-                <div class="log">
-                    <div>${x.message || "No message"}</div>
-                    <div class="meta">
-                        <span>${x.eventId || "-"}</span>
-                        <span>${new Date(x.createdAt || Date.now()).toLocaleString()}</span>
-                    </div>
-                </div>`;
+<div class="log">
+<div>${x.message || "No message"}</div>
+<div style="font-size:12px;color:#94a3b8;display:flex;justify-content:space-between;">
+<span>${x.eventId || "-"}</span>
+<span>${new Date(x.createdAt || Date.now()).toLocaleString()}</span>
+</div>
+</div>
+`;
+
                 });
 
-                document.getElementById("logs").innerHTML =
-                    html || "<div style='color:#94a3b8'>No logs found</div>";
+                document.getElementById("logs").innerHTML = html;
 
-                drawChart(labels, counts);
+                drawChart(labels, values);
 
             } catch (err) {
+
                 document.getElementById("logs").innerHTML =
-                    "<div style='color:red'>API Error: " + err.message + "</div>";
+                    "<div class='empty' style='color:red'>API Error: " + err.message + "</div>";
+
             }
+
         }
 
-        // ================= CHART =================
+        // ================= CHART FIX =================
         function drawChart(labels, data) {
+
             const ctx = document.getElementById("chart");
 
-            if (chart) chart.destroy();
+            // destroy old chart properly
+            if (chart) {
+                chart.destroy();
+                chart = null;
+            }
 
             chart = new Chart(ctx, {
                 type: "line",
                 data: {
-                    labels: labels,
+                    labels: labels.length ? labels : ["No Data"],
                     datasets: [{
-                        data: data,
+                        label: "Logs",
+                        data: data.length ? data : [0],
                         borderColor: "#38bdf8",
                         tension: 0.4
                     }]
                 },
                 options: {
-                    plugins: { legend: { display: false } },
-                    scales: { x: { display: false } }
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { display: false }
+                    }
                 }
             });
+
         }
 
         // INIT
