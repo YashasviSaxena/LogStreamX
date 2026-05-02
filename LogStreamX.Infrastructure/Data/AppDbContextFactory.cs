@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using LogStreamX.Infrastructure.Data;
 
 namespace LogStreamX.Infrastructure.Data
 {
@@ -10,9 +9,10 @@ namespace LogStreamX.Infrastructure.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
-            optionsBuilder.UseSqlServer(
-                "Server=(localdb)\\MSSQLLocalDB;Database=LogStreamXDb;Trusted_Connection=True;TrustServerCertificate=True"
-            );
+            var connectionString =
+                "Host=dpg-d7r3b60sfn5c73c8l09g-a;Port=5432;Database=logstreamxdb;Username=logstreamxdb_user;Password=4R8AtI0gmPWEk6yejgO6CPRCYjIvbcM5";
+
+            optionsBuilder.UseNpgsql(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }
