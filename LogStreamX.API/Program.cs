@@ -3,21 +3,19 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers
+// ================= DB =================
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// ================= CONTROLLERS =================
 builder.Services.AddControllers();
 
-// Swagger
+// ================= SWAGGER =================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// DB Context
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-);
-
-// CORS
+// ================= CORS (FOR UI SAFETY) =================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -30,24 +28,19 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Swagger
+// ================= PIPELINE =================
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// Static UI
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
-// CORS
 app.UseCors("AllowAll");
 
-app.UseAuthorization();
+app.UseDefaultFiles();   // IMPORTANT (serves index.html)
+app.UseStaticFiles();    // IMPORTANT (wwwroot UI)
 
+// ================= CONTROLLERS =================
 app.MapControllers();
 
-// Root → UI
-app.MapGet("/", () => Results.Redirect("/index.html"));
+// ================= HEALTH CHECK =================
+app.MapGet("/", () => "LogStreamX API Running 🚀");
 
-// Render port fix
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-app.Run($"http://0.0.0.0:{port}");
+app.Run();

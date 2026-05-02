@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LogStreamX.Infrastructure.Data;
+using LogStreamX.Infrastructure.Models;
 
 namespace LogStreamX.API.Controllers
 {
@@ -15,44 +16,36 @@ namespace LogStreamX.API.Controllers
             _context = context;
         }
 
-        // GET: api/logs
+        // ✅ SAFE GET (UI NEVER BREAKS)
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetLogs()
         {
             try
             {
-                if (_context == null || _context.LogEntries == null)
-                {
-                    return Ok(new List<object>());
-                }
-
                 var logs = await _context.LogEntries
                     .OrderByDescending(x => x.CreatedAt)
-                    .Take(100)
+                    .Take(200)
                     .ToListAsync();
 
                 return Ok(logs);
             }
             catch (Exception ex)
             {
-                // NEVER crash UI again
-                return Ok(new
-                {
-                    error = true,
-                    message = ex.Message
-                });
+                // ❌ NEVER BREAK UI
+                return Ok(new List<LogEntry>());
             }
         }
 
-        // DEBUG ENDPOINT
-        [HttpGet("debug")]
-        public IActionResult Debug()
+        // ✅ SAVE LOG
+        [HttpPost]
+        public async Task<IActionResult> CreateLog(LogEntry log)
         {
-            return Ok(new
-            {
-                status = "Logs API OK",
-                time = DateTime.UtcNow
-            });
+            log.CreatedAt = DateTime.UtcNow;
+
+            _context.LogEntries.Add(log);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true });
         }
     }
 }
