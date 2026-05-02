@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using LogStreamX.Infrastructure.Data;
-using LogStreamX.Infrastructure.Models;
-using LogStreamX.Contracts;
+﻿using LogStreamX.Contracts;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LogStreamX.API.Controllers
 {
@@ -9,32 +7,29 @@ namespace LogStreamX.API.Controllers
     [Route("api/[controller]")]
     public class LogPushController : ControllerBase
     {
-        private readonly AppDbContext _db;
-
-        public LogPushController(AppDbContext db)
-        {
-            _db = db;
-        }
+        private static readonly List<LogEvent> _logs = new();
 
         [HttpPost]
-        public async Task<IActionResult> Push(LogEvent log)
+        public IActionResult Push([FromBody] LogEvent log)
         {
-            var entity = new LogEntry
-            {
-                EventId = log.EventId,
-                Message = log.Message,
-                Source = log.Source,
-                CreatedAt = DateTime.UtcNow
-            };
+            if (log == null)
+                return BadRequest("Invalid log");
 
-            _db.LogEntries.Add(entity);
-            await _db.SaveChangesAsync();
+            log.CreatedAt = DateTime.UtcNow;
+
+            _logs.Add(log);
 
             return Ok(new
             {
-                status = "Sent to DB",
+                status = "Sent to Kafka",
                 eventId = log.EventId
             });
+        }
+
+        [HttpGet("/api/Logs")]
+        public IActionResult GetLogs()
+        {
+            return Ok(_logs);
         }
     }
 }
