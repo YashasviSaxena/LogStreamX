@@ -4,38 +4,40 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Add DB
-builder.Services.AddDbContext<LogDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// ✅ Add Kafka Producer
-builder.Services.AddSingleton<KafkaProducerService>();
-
-// ✅ Controllers + Swagger
+// Controllers
 builder.Services.AddControllers();
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ✅ CORS (important for UI)
+// DB
+builder.Services.AddDbContext<LogDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// CORS FIX (IMPORTANT FOR UI)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
 });
 
-var app = builder.Build();
+// Kafka Producer
+builder.Services.AddSingleton<KafkaProducerService>();
 
-app.UseCors("AllowAll");
+var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseCors("AllowAll");
+
 app.UseAuthorization();
 
 app.MapControllers();
-
-// ✅ Serve UI (index.html)
-app.UseDefaultFiles();
-app.UseStaticFiles();
 
 app.Run();
