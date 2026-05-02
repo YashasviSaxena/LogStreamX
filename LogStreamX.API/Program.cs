@@ -3,18 +3,14 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================= CONTROLLERS =================
+// Controllers
 builder.Services.AddControllers();
 
-// ================= DB SAFE CONFIG =================
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-    options.UseSqlServer(conn);
-});
-
-// ================= CORS =================
+// CORS (UI FIX)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -25,30 +21,27 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ================= SWAGGER =================
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// DB Context
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 var app = builder.Build();
 
-// ================= SWAGGER PIPELINE =================
+// Swagger
 app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogStreamX API v1");
-    c.RoutePrefix = "swagger";
-});
+app.UseSwaggerUI();
 
-// ================= STATIC FILES (UI) =================
+// Static UI (wwwroot)
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+// CORS
 app.UseCors("AllowAll");
-
-app.UseAuthorization();
 
 app.MapControllers();
 
-// ================= RENDER FIX =================
+// Render / Cloud port fix
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 app.Run($"http://0.0.0.0:{port}");

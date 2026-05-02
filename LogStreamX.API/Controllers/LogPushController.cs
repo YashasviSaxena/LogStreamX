@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using LogStreamX.Infrastructure.Data;
+using LogStreamX.Infrastructure.Models;
+using LogStreamX.Contracts;
 
 namespace LogStreamX.API.Controllers
 {
@@ -6,41 +9,32 @@ namespace LogStreamX.API.Controllers
     [Route("api/[controller]")]
     public class LogPushController : ControllerBase
     {
-        // POST: /api/LogPush
-        [HttpPost]
-        public IActionResult Push([FromBody] LogEvent request)
+        private readonly AppDbContext _db;
+
+        public LogPushController(AppDbContext db)
         {
-            try
-            {
-                if (request == null)
-                {
-                    return BadRequest("Invalid payload");
-                }
-
-                // Simulate Kafka push (you already have this working)
-                // In real system: producer.SendAsync(...)
-
-                return Ok(new
-                {
-                    status = "Sent to Kafka",
-                    eventId = request.EventId
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    error = ex.Message
-                });
-            }
+            _db = db;
         }
-    }
 
-    // DTO (IMPORTANT)
-    public class LogEvent
-    {
-        public string EventId { get; set; }
-        public string Message { get; set; }
-        public string Source { get; set; }
+        [HttpPost]
+        public async Task<IActionResult> Push(LogEvent log)
+        {
+            var entity = new LogEntry
+            {
+                EventId = log.EventId,
+                Message = log.Message,
+                Source = log.Source,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.LogEntries.Add(entity);
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                status = "Sent to DB",
+                eventId = log.EventId
+            });
+        }
     }
 }
