@@ -20,33 +20,24 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// IMPORTANT: Enable static files
+builder.Services.AddDirectoryBrowser();
 
 var app = builder.Build();
 
+app.UseCors("AllowAll");
+
 app.UseSwagger();
 app.UseSwaggerUI();
-
-app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
 app.MapControllers();
 
-// ✅ ROOT ENDPOINT FIX
-app.MapGet("/", () =>
-{
-    return Results.Ok(new
-    {
-        status = "LogStreamX API Running 🚀",
-        endpoints = new[]
-        {
-            "/api/logs"
-        }
-    });
-});
+// 🔥 ENABLE UI SERVING
+app.UseDefaultFiles();   // looks for index.html automatically
+app.UseStaticFiles();
 
-// Render port fix
+// Render port
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 app.Run($"http://0.0.0.0:{port}");

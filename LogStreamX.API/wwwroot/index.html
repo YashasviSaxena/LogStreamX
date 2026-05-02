@@ -4,75 +4,122 @@
     <meta charset="UTF-8">
     <title>LogStreamX</title>
 
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: Inter;
+        }
+
+        body {
             background: #0b1220;
             color: #e5e7eb;
             display: flex;
         }
 
+        /* SIDEBAR */
         .sidebar {
             width: 240px;
             background: #0f172a;
             height: 100vh;
             padding: 20px;
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
 
         .logo {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             color: #38bdf8;
+            margin-bottom: 30px;
         }
 
+        .nav {
+            margin-top: 20px;
+        }
+
+            .nav div {
+                padding: 12px;
+                margin-bottom: 10px;
+                border-radius: 10px;
+                cursor: pointer;
+                color: #94a3b8;
+            }
+
+                .nav div:hover {
+                    background: rgba(56,189,248,0.1);
+                    color: white;
+                }
+
+        /* MAIN */
         .main {
             flex: 1;
             padding: 20px;
         }
 
+        /* TOP BAR */
         .topbar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
 
+        .title {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
         .btn {
-            background: #2563eb;
+            background: linear-gradient(135deg,#38bdf8,#2563eb);
             border: none;
-            padding: 10px 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
             color: white;
-            border-radius: 8px;
             cursor: pointer;
         }
 
-        .card {
-            background: #111827;
-            padding: 15px;
-            border-radius: 12px;
-        }
-
+        /* CARDS */
         .grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 15px;
         }
 
+        /* LOGS */
+        .card {
+            background: #111827;
+            padding: 15px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
         .logs {
+            margin-top: 15px;
             max-height: 500px;
             overflow-y: auto;
         }
 
         .log {
-            background: #0f172a;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 10px;
+            background: #0f172a;
+            border-radius: 10px;
             border-left: 3px solid #38bdf8;
-            border-radius: 8px;
+        }
+
+        .log-title {
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
         .meta {
@@ -81,48 +128,97 @@
             display: flex;
             justify-content: space-between;
         }
+
+        /* STATS */
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #0f172a;
+            border-radius: 10px;
+        }
+
+            .stat i {
+                color: #38bdf8;
+            }
     </style>
 </head>
 
 <body>
 
+    <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="logo">LogStreamX</div>
+
+        <div class="nav">
+            <div><i class="fa fa-chart-line"></i> Dashboard</div>
+            <div><i class="fa fa-database"></i> Logs</div>
+            <div><i class="fa fa-bolt"></i> Kafka</div>
+            <div><i class="fa fa-cog"></i> Settings</div>
+        </div>
     </div>
 
+    <!-- MAIN -->
     <div class="main">
 
         <div class="topbar">
-            <h2>Live Logs</h2>
-            <button class="btn" onclick="loadLogs()">Refresh</button>
+            <div class="title">Live Log Dashboard</div>
+            <button class="btn" onclick="loadLogs()">
+                <i class="fa fa-refresh"></i> Refresh
+            </button>
         </div>
 
+        <!-- GRID -->
         <div class="grid">
 
+            <!-- LEFT -->
             <div class="card">
-                <h3>Logs</h3>
+                <h3>Live Logs</h3>
                 <div class="logs" id="logs"></div>
             </div>
 
-            <div class="card">
-                <h3>Stats</h3>
-                <p>Total: <b id="total">0</b></p>
-                <canvas id="chart"></canvas>
+            <!-- RIGHT -->
+            <div>
+
+                <div class="card">
+                    <h3>Stats</h3>
+
+                    <div class="stat">
+                        <span><i class="fa fa-database"></i> Total Logs</span>
+                        <b id="total">0</b>
+                    </div>
+
+                    <div class="stat">
+                        <span><i class="fa fa-bolt"></i> Kafka</span>
+                        <b>Active</b>
+                    </div>
+
+                    <div class="stat">
+                        <span><i class="fa fa-server"></i> Worker</span>
+                        <b>Running</b>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:15px;">
+                    <h3>Log Trend</h3>
+                    <canvas id="chart"></canvas>
+                </div>
+
             </div>
-
         </div>
-
     </div>
 
     <script>
 
-        const API_URL = "https://logstreamx.onrender.com/api/logs"; // IMPORTANT
-
         let chart;
+
+        // ✅ FIXED API BASE (production safe)
+        const API_BASE = window.location.origin;
 
         async function loadLogs() {
             try {
-                const res = await fetch(API_URL);
+                const res = await fetch(`${API_BASE}/api/logs`);
                 const data = await res.json();
 
                 document.getElementById("total").innerText = data.length;
@@ -132,12 +228,13 @@
                 let counts = [];
 
                 data.forEach((x, i) => {
+
                     labels.push(new Date(x.createdAt).toLocaleTimeString());
                     counts.push(i + 1);
 
                     html += `
                 <div class="log">
-                    <div><b>${x.message}</b></div>
+                    <div class="log-title">${x.message}</div>
                     <div class="meta">
                         <span>${x.eventId}</span>
                         <span>${new Date(x.createdAt).toLocaleString()}</span>
@@ -151,31 +248,40 @@
 
             } catch (err) {
                 console.error("API Error:", err);
+                document.getElementById("logs").innerHTML =
+                    "<div style='color:red'>Failed to load logs</div>";
             }
         }
 
         function drawChart(labels, data) {
-            const ctx = document.getElementById("chart");
+            const ctx = document.getElementById('chart');
 
             if (chart) chart.destroy();
 
             chart = new Chart(ctx, {
-                type: "line",
+                type: 'line',
                 data: {
                     labels: labels,
                     datasets: [{
+                        label: 'Logs',
                         data: data,
-                        borderColor: "#38bdf8",
+                        borderColor: '#38bdf8',
                         tension: 0.4
                     }]
                 },
                 options: {
-                    plugins: { legend: { display: false } },
-                    scales: { x: { display: false } }
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { display: false }
+                    }
                 }
             });
         }
 
+        // initial load + auto refresh
         loadLogs();
         setInterval(loadLogs, 5000);
 
