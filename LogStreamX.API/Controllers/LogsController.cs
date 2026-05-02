@@ -1,50 +1,37 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LogStreamX.Infrastructure.Data;
+using LogStreamX.Infrastructure.Models;
 
-namespace LogStreamX.API.Controllers
+namespace LogStreamX.API.Controllers;
+
+[ApiController]
+[Route("api/logs")]
+public class LogsController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class LogsController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public LogsController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public LogsController(AppDbContext context)
-        {
-            _context = context;
-        }
+    [HttpGet]
+    public async Task<IActionResult> Get()
+    {
+        var logs = await _context.LogEntries
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(200)
+            .ToListAsync();
 
-        // GET: /api/logs
-        [HttpGet]
-        public async Task<IActionResult> GetLogs()
-        {
-            var logs = await _context.LogEntries
-                .OrderByDescending(x => x.CreatedAt)
-                .Take(100)
-                .ToListAsync();
+        return Ok(logs);
+    }
 
-            return Ok(logs);
-        }
-
-        // OPTIONAL: GET single log by id
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetLog(int id)
-        {
-            var log = await _context.LogEntries
-                .FirstOrDefaultAsync(x => x.Id == id);
-
-            if (log == null)
-                return NotFound();
-
-            return Ok(log);
-        }
-
-        // OPTIONAL: health check endpoint
-        [HttpGet("health")]
-        public IActionResult Health()
-        {
-            return Ok(new { status = "LogStreamX API Running 🚀" });
-        }
+    [HttpPost]
+    public async Task<IActionResult> Add(LogEntry log)
+    {
+        _context.LogEntries.Add(log);
+        await _context.SaveChangesAsync();
+        return Ok();
     }
 }

@@ -3,43 +3,47 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Controllers
 builder.Services.AddControllers();
 
-// IMPORTANT: SAFE CONNECTION HANDLING
+// DB
 builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    options.UseSqlServer(conn);
-});
-
-// CORS
+// CORS (tightened for production)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        p => p.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins(
+                "https://your-frontend-domain.com"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+        });
 });
 
 var app = builder.Build();
 
-// SAFE PIPELINE
-app.UseCors("AllowAll");
+// Middleware
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 
 app.MapControllers();
 
-// ROOT ENDPOINT (SAFE)
-app.MapGet("/", () =>
+// Health endpoint
+app.MapGet("/health", () => Results.Ok(new
 {
-    return Results.Ok(new
-    {
-        status = "LogStreamX API Running 🚀",
-        endpoints = new[] { "/api/logs" }
-    });
-});
+    service = "LogStreamX",
+    status = "running"
+}));
 
+// Root
+app.MapGet("/", () => Results.Redirect("/health"));
+
+// Render port fix
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 app.Run($"http://0.0.0.0:{port}");
