@@ -28,16 +28,16 @@
         /* SIDEBAR */
         .sidebar {
             width: 240px;
-            height: 100vh;
             background: #0f172a;
+            height: 100vh;
             padding: 20px;
         }
 
         .logo {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             color: #38bdf8;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
         .nav div {
@@ -48,11 +48,10 @@
             color: #94a3b8;
         }
 
-            .nav div:hover,
-            .nav .active {
-                background: #1e293b;
-                color: white;
-            }
+        .nav .active {
+            background: #1e293b;
+            color: white;
+        }
 
         /* MAIN */
         .main {
@@ -63,6 +62,7 @@
         .topbar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
 
@@ -72,12 +72,12 @@
         }
 
         .btn {
-            background: #38bdf8;
+            background: linear-gradient(135deg,#38bdf8,#2563eb);
             border: none;
             padding: 10px 14px;
             border-radius: 10px;
-            cursor: pointer;
             color: white;
+            cursor: pointer;
         }
 
         /* GRID */
@@ -87,7 +87,6 @@
             gap: 15px;
         }
 
-        /* CARD */
         .card {
             background: #111827;
             padding: 15px;
@@ -96,7 +95,7 @@
 
         /* LOGS */
         .logs {
-            max-height: 420px;
+            max-height: 450px;
             overflow-y: auto;
         }
 
@@ -127,8 +126,8 @@
 
         .badge {
             padding: 4px 10px;
-            background: #1e293b;
             border-radius: 8px;
+            background: #1e293b;
             color: #38bdf8;
             font-size: 12px;
         }
@@ -142,10 +141,10 @@
         <div class="logo">LogStreamX</div>
 
         <div class="nav">
-            <div class="active">📊 Dashboard</div>
-            <div>📁 Logs</div>
-            <div>⚡ Kafka</div>
-            <div>⚙ Settings</div>
+            <div id="tab-dashboard" class="active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+            <div id="tab-logs" onclick="switchTab('logs')">📁 Logs</div>
+            <div id="tab-kafka" onclick="switchTab('kafka')">⚡ Kafka</div>
+            <div id="tab-settings" onclick="switchTab('settings')">⚙ Settings</div>
         </div>
     </div>
 
@@ -153,20 +152,19 @@
     <div class="main">
 
         <div class="topbar">
-            <div class="title">Live Log Dashboard</div>
-            <button class="btn" onclick="loadData()">Refresh</button>
+            <div class="title" id="title">Dashboard</div>
+            <button class="btn" onclick="loadLogs()">Refresh</button>
         </div>
 
-        <div class="grid">
+        <!-- DASHBOARD -->
+        <div id="dashboard">
 
-            <!-- LEFT -->
-            <div class="card">
-                <h3>Live Logs</h3>
-                <div class="logs" id="logs"></div>
-            </div>
+            <div class="grid">
 
-            <!-- RIGHT -->
-            <div>
+                <div class="card">
+                    <h3>Log Trend</h3>
+                    <canvas id="chart"></canvas>
+                </div>
 
                 <div class="card">
                     <h3>Stats</h3>
@@ -185,33 +183,104 @@
                         <span>Worker</span>
                         <span class="badge">Running</span>
                     </div>
-                </div>
 
-                <div class="card">
-                    <h3>Log Trend</h3>
-                    <canvas id="chart"></canvas>
                 </div>
 
             </div>
+
+            <div class="card" style="margin-top:15px;">
+                <h3>Recent Logs</h3>
+                <div class="logs" id="recentLogs"></div>
+            </div>
+
         </div>
+
+        <!-- LOGS -->
+        <div id="logsView" style="display:none;">
+            <div class="card">
+                <h3>All Logs</h3>
+                <div class="logs" id="allLogs"></div>
+            </div>
+        </div>
+
+        <!-- KAFKA -->
+        <div id="kafkaView" style="display:none;">
+            <div class="card">
+                <h3>Kafka Status</h3>
+                <div class="stat"><span>Broker</span><b>Confluent</b></div>
+                <div class="stat"><span>Topic</span><b>logs-topic</b></div>
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="settingsView" style="display:none;">
+            <div class="card">
+                <h3>Settings</h3>
+                <div class="stat"><span>API</span><b id="api">/api/logs</b></div>
+            </div>
+        </div>
+
     </div>
 
     <script>
 
+        const API = window.location.origin;
+
         let chart;
 
-        async function loadData() {
+        // ---------------- TAB SWITCH ----------------
+        function switchTab(tab) {
+
+            ["dashboard", "logs", "kafka", "settings"].forEach(t => {
+                document.getElementById(t + "View")?.style && (document.getElementById(t + "View").style.display = "none");
+            });
+
+            document.getElementById("dashboard").style.display = tab === "dashboard" ? "block" : "none";
+            document.getElementById("logsView").style.display = tab === "logs" ? "block" : "none";
+            document.getElementById("kafkaView").style.display = tab === "kafka" ? "block" : "none";
+            document.getElementById("settingsView").style.display = tab === "settings" ? "block" : "none";
+
+            document.querySelectorAll(".nav div").forEach(x => x.classList.remove("active"));
+            document.getElementById("tab-" + tab).classList.add("active");
+
+            document.getElementById("title").innerText = tab.toUpperCase();
+
+            if (tab === "dashboard" || tab === "logs") {
+                loadLogs();
+            }
+        }
+
+        // ---------------- LOAD LOGS (FIXED) ----------------
+        async function loadLogs() {
 
             try {
+                const res = await fetch(`${API}/api/logs`);
 
-                const res = await fetch('/api/logs');
+                if (!res.ok) {
+                    console.log("API error", res.status);
+                    return;
+                }
+
                 const data = await res.json();
 
                 if (!Array.isArray(data)) return;
 
                 document.getElementById("total").innerText = data.length;
 
-                document.getElementById("logs").innerHTML =
+                // RECENT
+                document.getElementById("recentLogs").innerHTML =
+                    data.slice(0, 5).map(x => `
+                    <div class="log">
+                        <div>${x.message}</div>
+                        <div class="meta">
+                            <span>${x.eventId}</span>
+                            <span>${new Date(x.createdAt).toLocaleString()}</span>
+                        </div>
+                    </div>
+                `).join("");
+
+                // ALL
+                document.getElementById("allLogs").innerHTML =
                     data.map(x => `
                     <div class="log">
                         <div>${x.message}</div>
@@ -220,19 +289,18 @@
                             <span>${new Date(x.createdAt).toLocaleString()}</span>
                         </div>
                     </div>
-                `).join("") || "<div>No logs</div>";
+                `).join("");
 
-                drawChart(
-                    data.map(x => new Date(x.createdAt).toLocaleTimeString()),
-                    data.map((_, i) => i + 1)
-                );
+                // CHART
+                drawChart(data);
 
             } catch (e) {
                 console.log("UI error", e);
             }
         }
 
-        function drawChart(labels, values) {
+        // ---------------- CHART ----------------
+        function drawChart(data) {
 
             const ctx = document.getElementById("chart");
 
@@ -241,9 +309,9 @@
             chart = new Chart(ctx, {
                 type: "line",
                 data: {
-                    labels: labels.length ? labels : ["No Data"],
+                    labels: data.map(x => new Date(x.createdAt).toLocaleTimeString()),
                     datasets: [{
-                        data: values.length ? values : [0],
+                        data: data.map((_, i) => i + 1),
                         borderColor: "#38bdf8",
                         tension: 0.4
                     }]
@@ -255,8 +323,9 @@
             });
         }
 
-        loadData();
-        setInterval(loadData, 5000);
+        // INIT
+        loadLogs();
+        setInterval(loadLogs, 5000);
 
     </script>
 

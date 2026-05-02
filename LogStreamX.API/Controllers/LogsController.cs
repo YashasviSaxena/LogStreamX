@@ -16,63 +16,56 @@ namespace LogStreamX.API.Controllers
             _context = context;
         }
 
-        // GET: /api/logs
+        // GET ALL LOGS
         [HttpGet]
-        public async Task<IActionResult> GetLogs()
+        public async Task<IActionResult> Get()
         {
             try
             {
                 var logs = await _context.LogEntries
-                    .OrderByDescending(x => x.CreatedAt)
+                    .OrderByDescending(x => x.Id)
                     .ToListAsync();
 
                 return Ok(logs);
             }
             catch (Exception ex)
             {
-                return Ok(new
+                return Ok(new List<object>
                 {
-                    error = true,
-                    message = ex.Message
+                    new { error = ex.Message }
                 });
             }
         }
 
-        // POST: /api/logs
+        // POST LOG (FIXED)
         [HttpPost]
-        public async Task<IActionResult> AddLog([FromBody] LogEntry log)
+        public async Task<IActionResult> Post([FromBody] LogEntry log)
         {
             try
             {
                 if (log == null)
                     return BadRequest("Invalid log");
 
-                log.CreatedAt = DateTime.UtcNow;
+                var entity = new LogEntry
+                {
+                    EventId = log.EventId ?? "NA",
+                    Message = log.Message ?? "NA",
+                    Source = log.Source ?? "swagger",
+                    CreatedAt = DateTime.UtcNow
+                };
 
-                await _context.LogEntries.AddAsync(log);
+                _context.LogEntries.Add(entity);
                 await _context.SaveChangesAsync();
 
-                return Ok(log);
+                return Ok(new { status = "saved" });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new
                 {
-                    error = true,
-                    message = ex.Message
+                    error = ex.Message
                 });
             }
-        }
-
-        // DEBUG
-        [HttpGet("debug")]
-        public IActionResult Debug()
-        {
-            return Ok(new
-            {
-                status = "Logs API OK",
-                time = DateTime.UtcNow
-            });
         }
     }
 }

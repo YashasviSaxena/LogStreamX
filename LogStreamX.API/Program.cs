@@ -3,26 +3,30 @@ using LogStreamX.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers
 builder.Services.AddControllers();
 
-// DB Context
+// DB
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// CORS (UI FIX)
+// CORS FIX (UI + SWAGGER)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                   .AllowAnyHeader()
-                   .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+               .AllowAnyHeader()
+               .AllowAnyMethod();
+    });
 });
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseCors("AllowAll");
 
@@ -31,10 +35,12 @@ app.UseStaticFiles();
 
 app.MapControllers();
 
-// Root route serves UI
-app.MapGet("/", () =>
+// UI route fix
+app.MapGet("/", async context =>
 {
-    return Results.Content(System.IO.File.ReadAllText("wwwroot/index.html"), "text/html");
+    var html = await File.ReadAllTextAsync("wwwroot/index.html");
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(html);
 });
 
 app.Run();
