@@ -9,19 +9,22 @@ namespace LogStreamX.API.Controllers
     [Route("api/[controller]")]
     public class LogsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext _db;
 
-        public LogsController(AppDbContext context)
+        public LogsController(AppDbContext db)
         {
-            _context = context;
+            _db = db;
         }
 
+        // =========================
+        // GET: api/logs
+        // =========================
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetLogs()
         {
             try
             {
-                var logs = await _context.LogEntries
+                var logs = await _db.LogEntries
                     .OrderByDescending(x => x.CreatedAt)
                     .Take(100)
                     .ToListAsync();
@@ -30,26 +33,66 @@ namespace LogStreamX.API.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(new[] { new { error = ex.Message } });
+                // 🔥 ALWAYS RETURN SAFE JSON (prevents UI crash)
+                return StatusCode(500, new
+                {
+                    error = ex.Message,
+                    source = "GetLogs"
+                });
             }
         }
 
+        // =========================
+        // POST: api/logs
+        // =========================
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] LogEntry log)
+        public async Task<IActionResult> CreateLog([FromBody] LogEntry request)
         {
             try
             {
-                log.CreatedAt = DateTime.UtcNow;
+                if (request == null)
+                {
+                    return BadRequest(new { error = "Request body is null" });
+                }
 
-                _context.LogEntries.Add(log);
-                await _context.SaveChangesAsync();
+                var log = new LogEntry
+                {
+                    EventId = request.EventId ?? "unknown",
+                    Message = request.Message ?? "empty",
+                    Source = request.Source ?? "api",
+                    CreatedAt = DateTime.UtcNow
+                };
 
-                return Ok(log);
+                _db.LogEntries.Add(log);
+                await _db.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    status = "saved",
+                    log.EventId
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = ex.Message });
+                return StatusCode(500, new
+                {
+                    error = ex.Message,
+                    source = "CreateLog"
+                });
             }
+        }
+
+        // =========================
+        // DEBUG: api/logs/debug
+        // =========================
+        [HttpGet("debug")]
+        public IActionResult Debug()
+        {
+            return Ok(new
+            {
+                status = "Logs API OK",
+                time = DateTime.UtcNow
+            });
         }
     }
 }

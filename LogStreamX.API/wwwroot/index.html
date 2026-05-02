@@ -1,48 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>LogStreamX</title>
 
     <link rel="icon" href="/favicon.ico">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
         body {
             margin: 0;
-            font-family: Inter;
+            font-family: Arial;
             background: #0b1220;
-            color: #e5e7eb;
+            color: white;
             display: flex;
         }
 
         .sidebar {
-            width: 240px;
+            width: 220px;
+            background: #111827;
             height: 100vh;
-            background: #0f172a;
             padding: 20px;
         }
 
-        .logo {
-            font-size: 18px;
-            font-weight: 700;
-            color: #38bdf8;
-            margin-bottom: 20px;
-        }
-
-        .nav div {
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 10px;
+        .menu div {
+            padding: 10px;
             cursor: pointer;
-            color: #94a3b8;
+            margin-bottom: 5px;
+            color: #aaa;
         }
 
-            .nav div.active,
-            .nav div:hover {
-                background: #1e293b;
+            .menu div:hover {
+                background: #1f2937;
                 color: white;
             }
 
@@ -51,165 +40,103 @@
             padding: 20px;
         }
 
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .btn {
-            background: #38bdf8;
-            border: none;
-            padding: 10px 14px;
-            border-radius: 10px;
-            color: white;
-            cursor: pointer;
-        }
-
         .card {
             background: #111827;
             padding: 15px;
-            border-radius: 14px;
+            border-radius: 10px;
             margin-bottom: 15px;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 15px;
-        }
-
-        .logs {
-            max-height: 420px;
-            overflow: auto;
-        }
-
         .log {
-            padding: 12px;
             background: #0f172a;
+            padding: 10px;
+            margin-bottom: 8px;
             border-left: 3px solid #38bdf8;
-            margin-bottom: 10px;
-            border-radius: 10px;
         }
 
         .stat {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
-            background: #0f172a;
-            margin-bottom: 10px;
-            border-radius: 10px;
+            margin: 8px 0;
         }
 
-        .badge {
-            padding: 4px 10px;
-            border-radius: 8px;
-            background: #1e293b;
-            color: #38bdf8;
-            font-size: 12px;
-        }
-
-        canvas {
-            width: 100%;
+        button {
+            background: #38bdf8;
+            border: none;
+            padding: 8px 12px;
+            color: white;
+            cursor: pointer;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- SIDEBAR -->
     <div class="sidebar">
-        <div class="logo">LogStreamX</div>
+        <h3>LogStreamX</h3>
 
-        <div class="nav">
-            <div class="active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-            <div onclick="switchTab('logs')">📁 Logs</div>
-            <div onclick="switchTab('kafka')">⚡ Kafka</div>
-            <div onclick="switchTab('settings')">⚙ Settings</div>
+        <div class="menu">
+            <div onclick="show('dashboard')">📊 Dashboard</div>
+            <div onclick="show('logs')">📁 Logs</div>
+            <div onclick="show('kafka')">⚡ Kafka</div>
+            <div onclick="show('settings')">⚙ Settings</div>
         </div>
     </div>
 
-    <!-- MAIN -->
     <div class="main">
 
-        <div class="topbar">
-            <h2 id="title">Dashboard</h2>
-            <button class="btn" onclick="loadData()">Refresh</button>
-        </div>
+        <button onclick="loadLogs()">Refresh</button>
 
         <!-- DASHBOARD -->
-        <div id="dashboardView">
+        <div id="dashboard">
 
-            <div class="grid">
+            <div class="card">
+                <h3>Stats</h3>
 
-                <div>
-
-                    <div class="card">
-                        <h3>📊 Log Trend</h3>
-                        <canvas id="chart"></canvas>
-                    </div>
-
-                    <div class="card">
-                        <h3>📁 Recent Logs</h3>
-                        <div class="logs" id="logs"></div>
-                    </div>
-
+                <div class="stat">
+                    <span>Total Logs</span>
+                    <b id="total">0</b>
                 </div>
 
-                <div>
-
-                    <div class="card">
-                        <h3>📊 Stats</h3>
-
-                        <div class="stat">
-                            <span>Total Logs</span>
-                            <b id="total">0</b>
-                        </div>
-
-                        <div class="stat">
-                            <span>Kafka</span>
-                            <span class="badge">ACTIVE</span>
-                        </div>
-
-                        <div class="stat">
-                            <span>Worker</span>
-                            <span class="badge">RUNNING</span>
-                        </div>
-                    </div>
-
+                <div class="stat">
+                    <span>Kafka</span>
+                    <b>Active</b>
                 </div>
 
+                <div class="stat">
+                    <span>Worker</span>
+                    <b>Running</b>
+                </div>
             </div>
+
+            <div class="card">
+                <h3>Log Trend</h3>
+                <canvas id="chart"></canvas>
+            </div>
+
         </div>
 
-        <!-- SETTINGS -->
-        <div id="settingsView" style="display:none">
+        <!-- LOGS -->
+        <div id="logs" style="display:none">
             <div class="card">
-                <h3>⚙ Settings</h3>
-                <p>Configuration panel coming soon ⚙</p>
+                <h3>Logs</h3>
+                <div id="logList"></div>
             </div>
         </div>
 
         <!-- KAFKA -->
-        <div id="kafkaView" style="display:none">
+        <div id="kafka" style="display:none">
             <div class="card">
-                <h3>⚡ Kafka Status</h3>
+                <h3>Kafka Status</h3>
+                <p>Confluent Cloud → ACTIVE</p>
+            </div>
+        </div>
 
-                <div class="stat">
-                    <span>Broker</span>
-                    <b>Confluent Cloud</b>
-                </div>
-
-                <div class="stat">
-                    <span>Status</span>
-                    <span class="badge" style="color:#10b981;">ACTIVE</span>
-                </div>
-
-                <div class="stat">
-                    <span>Topic</span>
-                    <b>logs-topic</b>
-                </div>
+        <!-- SETTINGS -->
+        <div id="settings" style="display:none">
+            <div class="card">
+                <h3>Settings</h3>
+                <p>Configuration Panel Coming Soon ⚙</p>
             </div>
         </div>
 
@@ -220,66 +147,41 @@
         const API = window.location.origin;
         let chart;
 
-        // ================= TAB SWITCH =================
-        function switchTab(tab) {
-
-            document.getElementById("dashboardView").style.display = tab === "dashboard" ? "block" : "none";
-            document.getElementById("settingsView").style.display = tab === "settings" ? "block" : "none";
-            document.getElementById("kafkaView").style.display = tab === "kafka" ? "block" : "none";
-
-            document.getElementById("title").innerText = tab.toUpperCase();
-
-            loadData();
-
+        function show(tab) {
+            document.getElementById("dashboard").style.display = tab === "dashboard" ? "block" : "none";
+            document.getElementById("logs").style.display = tab === "logs" ? "block" : "none";
+            document.getElementById("kafka").style.display = tab === "kafka" ? "block" : "none";
+            document.getElementById("settings").style.display = tab === "settings" ? "block" : "none";
         }
 
-        // ================= SAFE API LOAD =================
-        async function loadData() {
+        async function loadLogs() {
 
             try {
-
                 const res = await fetch(API + "/api/logs");
+                const data = await res.json();
 
-                if (!res.ok) {
-                    console.log("API error", res.status);
+                if (!Array.isArray(data)) {
+                    document.getElementById("logList").innerHTML = "API Error";
                     return;
                 }
 
-                const text = await res.text();
-
-                let data = [];
-
-                try {
-                    data = JSON.parse(text);
-                } catch {
-                    data = [];
-                }
-
-                if (!Array.isArray(data)) data = [];
-
                 document.getElementById("total").innerText = data.length;
 
-                // LOGS
-                document.getElementById("logs").innerHTML =
-                    data.length > 0
-                        ? data.map(x => `
-<div class="log">
-<div>${x.message ?? "No message"}</div>
-<small>${x.eventId ?? "-"}</small>
-</div>
-`).join("")
-                        : "<div>No logs found</div>";
+                document.getElementById("logList").innerHTML =
+                    data.map(x => `
+                    <div class="log">
+                        <b>${x.message}</b><br>
+                        <small>${x.eventId} | ${x.source} | ${x.createdAt}</small>
+                    </div>
+                `).join("");
 
-                // CHART
                 drawChart(data);
 
             } catch (e) {
-                console.log("UI error", e);
+                console.log(e);
             }
-
         }
 
-        // ================= CHART =================
         function drawChart(data) {
 
             const ctx = document.getElementById("chart");
@@ -289,24 +191,18 @@
             chart = new Chart(ctx, {
                 type: "line",
                 data: {
-                    labels: data.map((_, i) => i + 1),
+                    labels: data.map((_, i) => i),
                     datasets: [{
+                        label: "Logs",
                         data: data.map((_, i) => i + 1),
-                        borderColor: "#38bdf8",
-                        tension: 0.4
+                        borderColor: "#38bdf8"
                     }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: { x: { display: false } }
                 }
             });
-
         }
 
-        // INIT
-        loadData();
-        setInterval(loadData, 5000);
+        loadLogs();
+        setInterval(loadLogs, 5000);
 
     </script>
 

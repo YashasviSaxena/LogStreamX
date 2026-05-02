@@ -3,45 +3,47 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================= CONTROLLERS =================
+// ===================== CONTROLLERS =====================
 builder.Services.AddControllers();
 
-// ================= SWAGGER =================
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-    {
-        Title = "LogStreamX API",
-        Version = "v1",
-        Description = "Production Logging System"
-    });
-
-    // Prevent schema crash
-    options.CustomSchemaIds(type => type.FullName);
-});
-
-// ================= DB =================
+// ===================== DB CONTEXT =====================
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var conn = builder.Configuration.GetConnectionString("DefaultConnection");
-    options.UseSqlServer(conn);
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    );
 });
 
-// ================= CORS =================
-builder.Services.AddCors(opt =>
+// ===================== CORS =====================
+builder.Services.AddCors(options =>
 {
-    opt.AddPolicy("AllowAll", p =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        p.AllowAnyOrigin()
-         .AllowAnyHeader()
-         .AllowAnyMethod();
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
+});
+
+// ===================== SWAGGER (FIXED) =====================
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new()
+    {
+        Title = "LogStreamX API",
+        Version = "v1"
+    });
+
+    // 🔥 FIX: prevents Swagger crash (VERY IMPORTANT)
+    options.CustomSchemaIds(x => x.FullName);
 });
 
 var app = builder.Build();
 
-// ================= PIPELINE ORDER (IMPORTANT) =================
+// ===================== PIPELINE =====================
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -50,13 +52,14 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseStaticFiles();
-app.UseRouting();
 app.UseCors("AllowAll");
+
+app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// Health check
+// ===================== ROOT HEALTH =====================
 app.MapGet("/", () => "LogStreamX API Running 🚀");
 
 app.Run();
