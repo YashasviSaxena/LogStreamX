@@ -5,11 +5,14 @@ WORKDIR /src
 # Copy everything
 COPY . .
 
-# Restore using solution (SAFE FIX: auto-detect)
-RUN dotnet restore
+# Go to correct project folder explicitly
+WORKDIR /src/LogStreamX.API
 
-# Publish API project
-RUN dotnet publish LogStreamX.API/LogStreamX.API.csproj -c Release -o /app/publish
+# Restore ONLY API project
+RUN dotnet restore LogStreamX.API.csproj
+
+# Build + publish
+RUN dotnet publish LogStreamX.API.csproj -c Release -o /app/publish
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
