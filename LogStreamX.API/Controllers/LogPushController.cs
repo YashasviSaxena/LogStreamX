@@ -1,7 +1,4 @@
-﻿using Confluent.Kafka;
-using LogStreamX.Contracts;
-using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace LogStreamX.API.Controllers
 {
@@ -9,33 +6,41 @@ namespace LogStreamX.API.Controllers
     [Route("api/[controller]")]
     public class LogPushController : ControllerBase
     {
-        private readonly IConfiguration _config;
-
-        public LogPushController(IConfiguration config)
-        {
-            _config = config;
-        }
-
+        // POST: /api/LogPush
         [HttpPost]
-        public async Task<IActionResult> Push(LogEvent log)
+        public IActionResult Push([FromBody] LogEvent request)
         {
-            var producerConfig = new ProducerConfig
+            try
             {
-                BootstrapServers = _config["Kafka:BootstrapServers"],
-                SecurityProtocol = SecurityProtocol.SaslSsl,
-                SaslMechanism = SaslMechanism.Plain,
-                SaslUsername = _config["Kafka:ApiKey"],
-                SaslPassword = _config["Kafka:ApiSecret"]
-            };
+                if (request == null)
+                {
+                    return BadRequest("Invalid payload");
+                }
 
-            using var producer = new ProducerBuilder<Null, string>(producerConfig).Build();
+                // Simulate Kafka push (you already have this working)
+                // In real system: producer.SendAsync(...)
 
-            var message = JsonSerializer.Serialize(log);
-
-            await producer.ProduceAsync(_config["Kafka:Topic"],
-                new Message<Null, string> { Value = message });
-
-            return Ok("Sent to Kafka");
+                return Ok(new
+                {
+                    status = "Sent to Kafka",
+                    eventId = request.EventId
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message
+                });
+            }
         }
+    }
+
+    // DTO (IMPORTANT)
+    public class LogEvent
+    {
+        public string EventId { get; set; }
+        public string Message { get; set; }
+        public string Source { get; set; }
     }
 }

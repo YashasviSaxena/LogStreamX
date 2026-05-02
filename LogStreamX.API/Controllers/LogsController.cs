@@ -15,6 +15,7 @@ namespace LogStreamX.API.Controllers
             _context = context;
         }
 
+        // GET: /api/Logs
         [HttpGet]
         public IActionResult GetLogs()
         {
@@ -28,10 +29,14 @@ namespace LogStreamX.API.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(new { error = ex.Message });
+                return Ok(new[]
+                {
+                    new { error = ex.Message }
+                });
             }
         }
 
+        // POST: /api/Logs
         [HttpPost]
         public IActionResult AddLog(LogEntry log)
         {
