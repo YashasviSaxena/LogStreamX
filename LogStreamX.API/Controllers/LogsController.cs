@@ -20,12 +20,6 @@ namespace LogStreamX.API.Controllers
         {
             try
             {
-                // 🔥 ensures DB is reachable
-                if (!await _db.Database.CanConnectAsync())
-                {
-                    return StatusCode(500, new { error = "DB connection failed" });
-                }
-
                 var logs = await _db.LogEntries
                     .OrderByDescending(x => x.CreatedAt)
                     .Take(100)
