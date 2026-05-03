@@ -1,43 +1,42 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using LogStreamX.Infrastructure.Data;
-using LogStreamX.Infrastructure.Models;
 
-namespace LogStreamX.API.Services
+namespace LogStreamX.API.Services;
+
+public class LogBackgroundWorker : BackgroundService
 {
-    public class LogBackgroundWorker : BackgroundService
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<LogBackgroundWorker> _logger;
+
+    public LogBackgroundWorker(IServiceScopeFactory scopeFactory,
+                               ILogger<LogBackgroundWorker> logger)
     {
-        private readonly IServiceScopeFactory _scopeFactory;
+        _scopeFactory = scopeFactory;
+        _logger = logger;
+    }
 
-        public LogBackgroundWorker(IServiceScopeFactory scopeFactory)
-        {
-            _scopeFactory = scopeFactory;
-        }
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _logger.LogInformation("🚀 Background Worker Started");
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        while (!stoppingToken.IsCancellationRequested)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
                 using var scope = _scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<LogDbContext>();
 
-                // Example: process unprocessed logs
-                var logs = db.LogEntries
-                    .Where(x => !x.IsProcessed)
-                    .ToList();
+                var logs = db.Logs.ToList();
 
-                foreach (var log in logs)
-                {
-                    log.IsProcessed = true;
-                    log.ProcessedAt = DateTime.UtcNow;
-                }
-
-                if (logs.Any())
-                {
-                    await db.SaveChangesAsync();
-                }
+                _logger.LogInformation($"📦 Logs count: {logs.Count}");
 
                 await Task.Delay(5000, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Worker Error");
             }
         }
     }

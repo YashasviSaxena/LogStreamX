@@ -1,6 +1,6 @@
-﻿using LogStreamX.Infrastructure.Data;
+﻿using Microsoft.AspNetCore.Mvc;
+using LogStreamX.Infrastructure.Data;
 using LogStreamX.Infrastructure.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace LogStreamX.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace LogStreamX.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PushLog([FromBody] LogEntry log)
+        public async Task<IActionResult> Push(LogEntry log)
         {
             log.CreatedAt = DateTime.UtcNow;
 
-            _db.LogEntries.Add(log);
+            _db.Logs.Add(log);
             await _db.SaveChangesAsync();
 
-            return Ok(new { message = "Log stored successfully" });
+            return Ok("Saved");
         }
     }
 }

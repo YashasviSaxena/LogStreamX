@@ -6,7 +6,7 @@ var builder = Host.CreateApplicationBuilder(args);
 
 // DB
 builder.Services.AddDbContext<LogDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Kafka Consumer
 builder.Services.AddHostedService<KafkaConsumerService>();
