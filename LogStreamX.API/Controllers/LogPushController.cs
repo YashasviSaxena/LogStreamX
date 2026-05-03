@@ -1,5 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Confluent.Kafka;
 using LogStreamX.Contracts;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace LogStreamX.API.Controllers
 {
@@ -7,15 +9,37 @@ namespace LogStreamX.API.Controllers
     [Route("api/[controller]")]
     public class LogPushController : ControllerBase
     {
-        [HttpPost]
-        public IActionResult Push(LogDto dto)
+        private readonly IConfiguration _config;
+
+        public LogPushController(IConfiguration config)
         {
-            // In real system: send to Kafka
-            return Ok(new
+            _config = config;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Push([FromBody] LogDto dto)
+        {
+            var producerConfig = new ProducerConfig
             {
-                status = "received",
-                dto
+                BootstrapServers = _config["Kafka:BootstrapServers"],
+
+                // 🔥 REQUIRED FOR CONFLUENT CLOUD
+                SecurityProtocol = SecurityProtocol.SaslSsl,
+                SaslMechanism = SaslMechanism.Plain,
+                SaslUsername = _config["Kafka:ApiKey"],
+                SaslPassword = _config["Kafka:ApiSecret"]
+            };
+
+            using var producer = new ProducerBuilder<Null, string>(producerConfig).Build();
+
+            var json = JsonSerializer.Serialize(dto);
+
+            await producer.ProduceAsync(_config["Kafka:Topic"], new Message<Null, string>
+            {
+                Value = json
             });
+
+            return Ok(new { status = "received", dto });
         }
     }
 }

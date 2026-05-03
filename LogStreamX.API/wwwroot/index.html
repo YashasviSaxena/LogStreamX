@@ -6,11 +6,12 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
         body {
             margin: 0;
-            font-family: Inter, sans-serif;
+            font-family: Inter;
             background: #0b1220;
             color: #e5e7eb;
             display: flex;
@@ -20,25 +21,25 @@
         .sidebar {
             width: 240px;
             background: #0f172a;
-            height: 100vh;
             padding: 20px;
+            height: 100vh;
         }
 
         .logo {
+            font-weight: 700;
             color: #38bdf8;
-            font-weight: bold;
             margin-bottom: 20px;
         }
 
         .nav div {
             padding: 12px;
-            margin-bottom: 10px;
-            cursor: pointer;
+            margin: 8px 0;
             border-radius: 8px;
+            cursor: pointer;
         }
 
             .nav div:hover {
-                background: rgba(56,189,248,0.1);
+                background: #1e293b;
             }
 
         /* MAIN */
@@ -47,7 +48,6 @@
             padding: 20px;
         }
 
-        /* CARDS */
         .card {
             background: #111827;
             padding: 15px;
@@ -55,24 +55,40 @@
             margin-bottom: 15px;
         }
 
-        /* LOG */
+        .hidden {
+            display: none;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
         .log {
             background: #0f172a;
             padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             border-left: 3px solid #38bdf8;
+            border-radius: 6px;
         }
 
         .meta {
             font-size: 12px;
             color: #94a3b8;
-            display: flex;
-            justify-content: space-between;
         }
 
-        .hidden {
-            display: none;
+        /* STATUS COLORS */
+        .green {
+            color: #22c55e;
+        }
+
+        .red {
+            color: #ef4444;
+        }
+
+        .yellow {
+            color: #facc15;
         }
     </style>
 </head>
@@ -80,13 +96,14 @@
 <body>
 
     <div class="sidebar">
-        <div class="logo">LogStreamX</div>
+        <div class="logo">🚀 LogStreamX</div>
+
         <div class="nav">
             <div onclick="showTab('dashboard')"><i class="fa fa-chart-line"></i> Dashboard</div>
             <div onclick="showTab('logs')"><i class="fa fa-database"></i> Logs</div>
             <div onclick="showTab('kafka')"><i class="fa fa-bolt"></i> Kafka</div>
             <div onclick="showTab('settings')"><i class="fa fa-cog"></i> Settings</div>
-            <div onclick="showTab('flow')"><i class="fa fa-diagram-project"></i> Flow</div>
+            <div onclick="showTab('flow')"><i class="fa fa-project-diagram"></i> Flow</div>
         </div>
     </div>
 
@@ -94,55 +111,130 @@
 
         <!-- DASHBOARD -->
         <div id="dashboard">
-            <h2>Observability Dashboard</h2>
+            <h2>📊 Observability Dashboard</h2>
 
             <div class="card">
-                <b>Total Logs:</b> <span id="total">0</span>
+                <div class="stat">
+                    <span>Total Logs</span>
+                    <b id="total">0</b>
+                </div>
+
+                <div class="stat">
+                    <span>API Status</span>
+                    <b id="apiStatus" class="yellow">Checking...</b>
+                </div>
+
+                <div class="stat">
+                    <span>Kafka</span>
+                    <b class="green">Active</b>
+                </div>
+
+                <div class="stat">
+                    <span>Worker</span>
+                    <b class="green">Running</b>
+                </div>
             </div>
 
             <div class="card">
+                <h3>Traffic</h3>
                 <canvas id="chart"></canvas>
             </div>
         </div>
 
         <!-- LOGS -->
-        <div id="logsTab" class="hidden">
-            <h2>Logs</h2>
-            <div id="logs"></div>
+        <div id="logs" class="hidden">
+            <h2>📄 Logs</h2>
+            <div id="logContainer"></div>
         </div>
 
         <!-- KAFKA -->
         <div id="kafka" class="hidden">
-            <h2>Kafka Status</h2>
-            <div class="card">Status: Active</div>
-            <div class="card">Topic: logs-topic</div>
+            <h2>⚡ Kafka Monitoring</h2>
+
+            <div class="card">
+                <div class="stat">
+                    <span>Status</span>
+                    <b class="green">Active (Confluent Cloud)</b>
+                </div>
+
+                <div class="stat">
+                    <span>Topic</span>
+                    <b>logs-topic</b>
+                </div>
+
+                <div class="stat">
+                    <span>Pipeline</span>
+                    <b>Producer → Topic → Consumer</b>
+                </div>
+
+                <div class="stat">
+                    <span>Mode</span>
+                    <b>Cloud Kafka</b>
+                </div>
+            </div>
         </div>
 
         <!-- SETTINGS -->
         <div id="settings" class="hidden">
-            <h2>Settings</h2>
+            <h2>⚙️ Settings</h2>
+
             <div class="card">
-                API: https://logstreamx.onrender.com/api/logs
+                <div class="stat">
+                    <span>API Endpoint</span>
+                    <b>https://logstreamx.onrender.com/api/logs</b>
+                </div>
+
+                <div class="stat">
+                    <span>Swagger</span>
+                    <b>
+                        <a href="https://logstreamx.onrender.com/swagger" target="_blank" style="color:#38bdf8;">
+                            Open Swagger
+                        </a>
+                    </b>
+                </div>
+
+                <div class="stat">
+                    <span>Environment</span>
+                    <b>Production (Render)</b>
+                </div>
+
+                <div class="stat">
+                    <span>Storage</span>
+                    <b>SQL Server</b>
+                </div>
             </div>
         </div>
 
         <!-- FLOW -->
         <div id="flow" class="hidden">
-            <h2>Project Flow</h2>
-            <div class="card">
-                Swagger → Kafka → Worker → DB → API → UI
-            </div>
+            <h2>🔄 System Flow</h2>
 
             <div class="card">
-                <b>Swagger Test:</b><br>
-                POST /api/LogPush<br>
-                Then refresh dashboard
-            </div>
+                <p><b>Architecture Pipeline:</b></p>
+                <p>Swagger → API → Kafka → Worker → SQL Server → API → UI</p>
 
-            <div class="card">
-                <a href="https://logstreamx.onrender.com/swagger" target="_blank">
-                    Open Swagger
-                </a>
+                <br>
+
+                <p><b>Step-by-Step:</b></p>
+                <ol>
+                    <li>Send log via Swagger POST /api/LogPush</li>
+                    <li>API publishes message to Kafka topic</li>
+                    <li>Worker consumes from Kafka</li>
+                    <li>Worker stores logs in SQL Server</li>
+                    <li>API fetches logs from DB</li>
+                    <li>UI displays logs</li>
+                </ol>
+
+                <br>
+
+                <p><b>Test Instructions:</b></p>
+                <ol>
+                    <li>Open Swagger</li>
+                    <li>Execute POST /api/LogPush</li>
+                    <li>Wait 2–3 seconds</li>
+                    <li>Go Dashboard → Refresh</li>
+                    <li>Logs should appear</li>
+                </ol>
             </div>
         </div>
 
@@ -152,64 +244,53 @@
 
         let chart;
 
-        /* TAB SWITCH */
         function showTab(tab) {
-            document.getElementById("dashboard").classList.add("hidden");
-            document.getElementById("logsTab").classList.add("hidden");
-            document.getElementById("kafka").classList.add("hidden");
-            document.getElementById("settings").classList.add("hidden");
-            document.getElementById("flow").classList.add("hidden");
-
-            if (tab === "dashboard") document.getElementById("dashboard").classList.remove("hidden");
-            if (tab === "logs") document.getElementById("logsTab").classList.remove("hidden");
-            if (tab === "kafka") document.getElementById("kafka").classList.remove("hidden");
-            if (tab === "settings") document.getElementById("settings").classList.remove("hidden");
-            if (tab === "flow") document.getElementById("flow").classList.remove("hidden");
+            ['dashboard', 'logs', 'kafka', 'settings', 'flow'].forEach(t => {
+                document.getElementById(t).classList.add('hidden');
+            });
+            document.getElementById(tab).classList.remove('hidden');
         }
 
-        /* LOAD LOGS */
         async function loadLogs() {
             try {
                 const res = await fetch('/api/logs');
 
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text);
-                }
+                if (!res.ok) throw new Error("API Error");
 
                 const data = await res.json();
+
+                document.getElementById("apiStatus").innerText = "Healthy";
+                document.getElementById("apiStatus").className = "green";
 
                 document.getElementById("total").innerText = data.length;
 
                 let html = "";
                 let labels = [];
-                let values = [];
+                let counts = [];
 
                 data.forEach((x, i) => {
+                    labels.push(new Date(x.createdAt).toLocaleTimeString());
+                    counts.push(i + 1);
+
                     html += `
                 <div class="log">
-                    <div>${x.message || "No message"}</div>
+                    <b>${x.message}</b>
                     <div class="meta">
-                        <span>${x.eventId || "N/A"}</span>
-                        <span>${new Date(x.createdAt).toLocaleString()}</span>
+                        ${x.eventId} | ${new Date(x.createdAt).toLocaleString()}
                     </div>
                 </div>`;
-
-                    labels.push(i);
-                    values.push(i + 1);
                 });
 
-                document.getElementById("logs").innerHTML = html;
+                document.getElementById("logContainer").innerHTML = html;
 
-                drawChart(labels, values);
+                drawChart(labels, counts);
 
             } catch (err) {
-                document.getElementById("logs").innerHTML =
-                    `<div style="color:red">API Error: ${err.message}</div>`;
+                document.getElementById("apiStatus").innerText = "Down";
+                document.getElementById("apiStatus").className = "red";
             }
         }
 
-        /* CHART */
         function drawChart(labels, data) {
             const ctx = document.getElementById('chart');
 
@@ -223,9 +304,6 @@
                         data: data,
                         borderColor: '#38bdf8'
                     }]
-                },
-                options: {
-                    plugins: { legend: { display: false } }
                 }
             });
         }

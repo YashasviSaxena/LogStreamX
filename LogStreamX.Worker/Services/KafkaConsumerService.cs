@@ -5,7 +5,6 @@ using LogStreamX.Infrastructure.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 
 namespace LogStreamX.Worker.Services
@@ -26,31 +25,30 @@ namespace LogStreamX.Worker.Services
             _config = config;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Task.Run(() => Consume(stoppingToken), stoppingToken);
+            return Task.Run(() => Consume(stoppingToken), stoppingToken);
         }
 
         private void Consume(CancellationToken cancellationToken)
         {
-            var consumerConfig = new ConsumerConfig
+            var config = new ConsumerConfig
             {
                 BootstrapServers = _config["Kafka:BootstrapServers"],
                 GroupId = _config["Kafka:GroupId"],
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = true,
 
-                // 🔐 REQUIRED for Confluent Cloud
+                // 🔥 REQUIRED FOR CONFLUENT CLOUD
                 SecurityProtocol = SecurityProtocol.SaslSsl,
                 SaslMechanism = SaslMechanism.Plain,
                 SaslUsername = _config["Kafka:ApiKey"],
                 SaslPassword = _config["Kafka:ApiSecret"]
             };
 
-            using var consumer = new ConsumerBuilder<Ignore, string>(consumerConfig).Build();
+            using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
             consumer.Subscribe(_config["Kafka:Topic"]);
 
-            _logger.LogInformation("Kafka Consumer Started 🚀");
+            _logger.LogInformation("🚀 Kafka Consumer Started");
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -76,11 +74,11 @@ namespace LogStreamX.Worker.Services
                     db.LogEntries.Add(entity);
                     db.SaveChanges();
 
-                    _logger.LogInformation("Saved log: {EventId}", entity.EventId);
+                    _logger.LogInformation("✅ Saved log: {EventId}", entity.EventId);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Kafka error");
+                    _logger.LogError(ex, "❌ Kafka Error");
                 }
             }
         }

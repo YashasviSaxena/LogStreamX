@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using LogStreamX.Infrastructure.Data;
+﻿using LogStreamX.Infrastructure.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace LogStreamX.API.Controllers
@@ -29,10 +29,7 @@ namespace LogStreamX.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    error = ex.Message
-                });
+                return StatusCode(500, new { error = ex.Message });
             }
         }
     }
