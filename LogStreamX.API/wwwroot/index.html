@@ -89,6 +89,11 @@
             font-size: 12px;
             color: #94a3b8;
         }
+
+        .error {
+            color: red;
+            padding: 10px;
+        }
     </style>
 
 </head>
@@ -145,14 +150,25 @@
         let chart;
 
         async function loadLogs() {
-
             try {
-
                 const res = await fetch('/api/Logs');
 
-                if (!res.ok) return;
+                // ❌ handle API failure
+                if (!res.ok) {
+                    document.getElementById("logs").innerHTML =
+                        `<div class="error">API Error: ${res.status}</div>`;
+                    return;
+                }
 
-                const data = await res.json();
+                const text = await res.text();
+
+                if (!text) {
+                    document.getElementById("logs").innerHTML =
+                        `<div class="error">No data received</div>`;
+                    return;
+                }
+
+                const data = JSON.parse(text);
 
                 document.getElementById("count").innerText = data.length;
 
@@ -161,27 +177,28 @@
                 let values = [];
 
                 data.forEach((x, i) => {
-
                     labels.push(i);
                     values.push(i + 1);
 
                     html.push(`
-<div class="log">
-<b>${x.message}</b>
-<div class="meta">${x.eventId} | ${x.source}</div>
-</div>
-`);
-
+                <div class="log">
+                    <b>${x.message || "No Message"}</b>
+                    <div class="meta">
+                        ${x.eventId || "N/A"} | ${x.source || "Unknown"}
+                    </div>
+                </div>
+                `);
                 });
 
                 document.getElementById("logs").innerHTML = html.join("");
 
                 drawChart(labels, values);
 
-            } catch (e) {
-                console.log("API error", e);
+            } catch (err) {
+                console.error(err);
+                document.getElementById("logs").innerHTML =
+                    `<div class="error">UI Crash: ${err.message}</div>`;
             }
-
         }
 
         function drawChart(labels, data) {
@@ -193,13 +210,12 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: "logs",
+                        label: "Logs",
                         data: data,
                         borderColor: "#38bdf8"
                     }]
                 }
             });
-
         }
 
         loadLogs();
