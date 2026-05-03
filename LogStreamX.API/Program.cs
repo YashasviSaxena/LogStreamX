@@ -1,10 +1,13 @@
 ﻿using LogStreamX.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using LogStreamX.API.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Controllers
 builder.Services.AddControllers();
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -17,16 +20,21 @@ builder.Services.AddHostedService<LogBackgroundWorker>();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// 🚨 ORDER IS CRITICAL
+app.UseRouting();
 
-// 🔥 ENABLE STATIC FILES (THIS FIXES YOUR UI ISSUE)
+// ✅ STATIC FILES MUST COME BEFORE MAPS
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseAuthorization();
+
 app.MapControllers();
 
-// UI becomes default page
-app.MapGet("/", () => Results.Redirect("/index.html"));
+// SPA fallback (VERY IMPORTANT)
+app.MapFallbackToFile("index.html");
 
 app.Run();
