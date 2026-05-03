@@ -1,38 +1,46 @@
-﻿using LogStreamX.API.Services;
-using LogStreamX.Infrastructure.Data;
+﻿using LogStreamX.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using LogStreamX.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Controllers
 builder.Services.AddControllers();
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ✅ PostgreSQL (Render)
+// =======================
+// DATABASE (POSTGRES)
+// =======================
 builder.Services.AddDbContext<LogDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsql =>
+        {
+            npgsql.EnableRetryOnFailure(5);
+            npgsql.CommandTimeout(30);
+        }));
 
-// Worker
+// =======================
+// BACKGROUND WORKER
+// =======================
 builder.Services.AddHostedService<LogBackgroundWorker>();
-
-builder.Services.AddCors(opt =>
-{
-    opt.AddPolicy("AllowAll", p =>
-        p.AllowAnyOrigin()
-         .AllowAnyMethod()
-         .AllowAnyHeader());
-});
 
 var app = builder.Build();
 
+// =======================
+// MIDDLEWARE
+// =======================
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseCors("AllowAll");
+app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/health", () => Results.Ok("LogStreamX Running 🚀"));
+// Redirect root → Swagger
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();
