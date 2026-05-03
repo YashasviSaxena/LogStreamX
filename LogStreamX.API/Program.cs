@@ -4,60 +4,29 @@ using LogStreamX.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =======================
-// CONTROLLERS
-// =======================
 builder.Services.AddControllers();
-
-// =======================
-// SWAGGER
-// =======================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// =======================
-// DATABASE (POSTGRES - RENDER SAFE)
-// =======================
+// DB
 builder.Services.AddDbContext<LogDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsql =>
-        {
-            npgsql.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorCodesToAdd: null);
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            npgsql.CommandTimeout(30);
-        }));
-
-// =======================
-// BACKGROUND WORKER (KAFKA CONSUMER)
-// =======================
+// Worker
 builder.Services.AddHostedService<LogBackgroundWorker>();
 
 var app = builder.Build();
 
-// =======================
-// MIDDLEWARE PIPELINE
-// =======================
-
-// Swagger UI
 app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogStreamX.API v1");
-});
+app.UseSwaggerUI();
 
-// Routing
-app.UseRouting();
+// 🔥 ENABLE STATIC FILES (THIS FIXES YOUR UI ISSUE)
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
-app.UseAuthorization();
-
-// Controllers
 app.MapControllers();
 
-// Root redirect → Swagger
-app.MapGet("/", () => Results.Redirect("/swagger"));
+// UI becomes default page
+app.MapGet("/", () => Results.Redirect("/index.html"));
 
 app.Run();

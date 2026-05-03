@@ -78,7 +78,6 @@
             color: #94a3b8;
         }
 
-        /* STATUS COLORS */
         .green {
             color: #22c55e;
         }
@@ -152,25 +151,9 @@
             <h2>⚡ Kafka Monitoring</h2>
 
             <div class="card">
-                <div class="stat">
-                    <span>Status</span>
-                    <b class="green">Active (Confluent Cloud)</b>
-                </div>
-
-                <div class="stat">
-                    <span>Topic</span>
-                    <b>logs-topic</b>
-                </div>
-
-                <div class="stat">
-                    <span>Pipeline</span>
-                    <b>Producer → Topic → Consumer</b>
-                </div>
-
-                <div class="stat">
-                    <span>Mode</span>
-                    <b>Cloud Kafka</b>
-                </div>
+                <div class="stat"><span>Status</span><b class="green">Active</b></div>
+                <div class="stat"><span>Topic</span><b>logs-topic</b></div>
+                <div class="stat"><span>Pipeline</span><b>Producer → Kafka → Worker → DB</b></div>
             </div>
         </div>
 
@@ -180,27 +163,18 @@
 
             <div class="card">
                 <div class="stat">
-                    <span>API Endpoint</span>
+                    <span>API</span>
                     <b>https://logstreamx.onrender.com/api/logs</b>
                 </div>
 
                 <div class="stat">
                     <span>Swagger</span>
-                    <b>
-                        <a href="https://logstreamx.onrender.com/swagger" target="_blank" style="color:#38bdf8;">
-                            Open Swagger
-                        </a>
-                    </b>
+                    <b><a href="/swagger" style="color:#38bdf8;">Open</a></b>
                 </div>
 
                 <div class="stat">
-                    <span>Environment</span>
-                    <b>Production (Render)</b>
-                </div>
-
-                <div class="stat">
-                    <span>Storage</span>
-                    <b>SQL Server</b>
+                    <span>Env</span>
+                    <b>Production</b>
                 </div>
             </div>
         </div>
@@ -210,30 +184,11 @@
             <h2>🔄 System Flow</h2>
 
             <div class="card">
-                <p><b>Architecture Pipeline:</b></p>
-                <p>Swagger → API → Kafka → Worker → SQL Server → API → UI</p>
-
-                <br>
-
-                <p><b>Step-by-Step:</b></p>
                 <ol>
-                    <li>Send log via Swagger POST /api/LogPush</li>
-                    <li>API publishes message to Kafka topic</li>
-                    <li>Worker consumes from Kafka</li>
-                    <li>Worker stores logs in SQL Server</li>
-                    <li>API fetches logs from DB</li>
-                    <li>UI displays logs</li>
-                </ol>
-
-                <br>
-
-                <p><b>Test Instructions:</b></p>
-                <ol>
-                    <li>Open Swagger</li>
-                    <li>Execute POST /api/LogPush</li>
-                    <li>Wait 2–3 seconds</li>
-                    <li>Go Dashboard → Refresh</li>
-                    <li>Logs should appear</li>
+                    <li>Swagger → POST log</li>
+                    <li>API → Kafka</li>
+                    <li>Worker → SQL DB</li>
+                    <li>UI → Fetch logs</li>
                 </ol>
             </div>
         </div>
@@ -242,20 +197,21 @@
 
     <script>
 
+        const API = "https://logstreamx.onrender.com";
+
         let chart;
 
         function showTab(tab) {
-            ['dashboard', 'logs', 'kafka', 'settings', 'flow'].forEach(t => {
-                document.getElementById(t).classList.add('hidden');
-            });
+            ['dashboard', 'logs', 'kafka', 'settings', 'flow'].forEach(t =>
+                document.getElementById(t).classList.add('hidden')
+            );
             document.getElementById(tab).classList.remove('hidden');
         }
 
         async function loadLogs() {
             try {
-                const res = await fetch('/api/logs');
-
-                if (!res.ok) throw new Error("API Error");
+                const res = await fetch(`${API}/api/logs`);
+                if (!res.ok) throw new Error("API down");
 
                 const data = await res.json();
 
@@ -275,9 +231,7 @@
                     html += `
                 <div class="log">
                     <b>${x.message}</b>
-                    <div class="meta">
-                        ${x.eventId} | ${new Date(x.createdAt).toLocaleString()}
-                    </div>
+                    <div class="meta">${x.eventId} | ${new Date(x.createdAt).toLocaleString()}</div>
                 </div>`;
                 });
 
@@ -294,14 +248,16 @@
         function drawChart(labels, data) {
             const ctx = document.getElementById('chart');
 
+            if (!ctx) return;
+
             if (chart) chart.destroy();
 
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{
-                        data: data,
+                        data,
                         borderColor: '#38bdf8'
                     }]
                 }
