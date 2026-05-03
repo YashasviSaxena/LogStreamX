@@ -1,202 +1,341 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>LogStreamX</title>
 
-    <link rel="icon" href="/favicon.ico">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Arial;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Inter;
+        }
+
+        body {
             background: #0b1220;
-            color: white;
+            color: #e5e7eb;
             display: flex;
         }
 
+        /* SIDEBAR */
         .sidebar {
-            width: 220px;
-            background: #111827;
+            width: 250px;
+            background: #0f172a;
             height: 100vh;
             padding: 20px;
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
 
-        .menu div {
-            padding: 10px;
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: #38bdf8;
+            margin-bottom: 30px;
+        }
+
+        .nav-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
             cursor: pointer;
-            margin-bottom: 5px;
-            color: #aaa;
+            color: #94a3b8;
+            transition: 0.2s;
         }
 
-            .menu div:hover {
-                background: #1f2937;
+            .nav-item:hover,
+            .nav-item.active {
+                background: rgba(56,189,248,0.15);
                 color: white;
             }
 
+        /* MAIN */
         .main {
             flex: 1;
             padding: 20px;
         }
 
+        /* TOPBAR */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .btn {
+            background: linear-gradient(135deg,#38bdf8,#2563eb);
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+
+        /* CARDS */
         .card {
             background: #111827;
             padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .log {
-            background: #0f172a;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-left: 3px solid #38bdf8;
-        }
-
+        /* STATS */
         .stat {
             display: flex;
             justify-content: space-between;
-            margin: 8px 0;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #0f172a;
+            border-radius: 10px;
         }
 
-        button {
-            background: #38bdf8;
-            border: none;
-            padding: 8px 12px;
-            color: white;
-            cursor: pointer;
+        /* LOGS TABLE */
+        .log {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #0f172a;
+            border-radius: 10px;
+            border-left: 3px solid #38bdf8;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            background: #1e293b;
+            color: #38bdf8;
+        }
+
+        /* TABS */
+        .tab {
+            display: none;
+        }
+
+            .tab.active {
+                display: block;
+            }
+
+        /* KAFKA STATUS */
+        .kafka-box {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        /* SETTINGS */
+        .setting {
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 10px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 
 <body>
 
+    <!-- SIDEBAR -->
     <div class="sidebar">
-        <h3>LogStreamX</h3>
+        <div class="logo">LogStreamX</div>
 
-        <div class="menu">
-            <div onclick="show('dashboard')">📊 Dashboard</div>
-            <div onclick="show('logs')">📁 Logs</div>
-            <div onclick="show('kafka')">⚡ Kafka</div>
-            <div onclick="show('settings')">⚙ Settings</div>
+        <div class="nav-item active" onclick="openTab('dashboard')">
+            <i class="fa fa-chart-line"></i> Dashboard
+        </div>
+
+        <div class="nav-item" onclick="openTab('logs')">
+            <i class="fa fa-database"></i> Logs
+        </div>
+
+        <div class="nav-item" onclick="openTab('kafka')">
+            <i class="fa fa-bolt"></i> Kafka
+        </div>
+
+        <div class="nav-item" onclick="openTab('settings')">
+            <i class="fa fa-cog"></i> Settings
         </div>
     </div>
 
+    <!-- MAIN -->
     <div class="main">
 
-        <button onclick="loadLogs()">Refresh</button>
+        <div class="topbar">
+            <div class="title">LogStreamX Monitoring</div>
+            <button class="btn" onclick="loadLogs()">
+                <i class="fa fa-refresh"></i> Refresh
+            </button>
+        </div>
 
         <!-- DASHBOARD -->
-        <div id="dashboard">
+        <div id="dashboard" class="tab active">
 
-            <div class="card">
-                <h3>Stats</h3>
+            <div class="grid">
 
-                <div class="stat">
-                    <span>Total Logs</span>
-                    <b id="total">0</b>
+                <div class="card">
+                    <h3>Live Logs Trend</h3>
+                    <canvas id="chart"></canvas>
                 </div>
 
-                <div class="stat">
-                    <span>Kafka</span>
-                    <b>Active</b>
+                <div class="card">
+                    <h3>System Stats</h3>
+
+                    <div class="stat">
+                        <span>Total Logs</span>
+                        <b id="total">0</b>
+                    </div>
+
+                    <div class="stat">
+                        <span>Kafka</span>
+                        <b style="color:#22c55e">Active</b>
+                    </div>
+
+                    <div class="stat">
+                        <span>Worker</span>
+                        <b style="color:#22c55e">Running</b>
+                    </div>
                 </div>
 
-                <div class="stat">
-                    <span>Worker</span>
-                    <b>Running</b>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Log Trend</h3>
-                <canvas id="chart"></canvas>
             </div>
 
         </div>
 
         <!-- LOGS -->
-        <div id="logs" style="display:none">
+        <div id="logs" class="tab">
+
             <div class="card">
                 <h3>Logs</h3>
                 <div id="logList"></div>
             </div>
+
         </div>
 
         <!-- KAFKA -->
-        <div id="kafka" style="display:none">
+        <div id="kafka" class="tab">
+
             <div class="card">
                 <h3>Kafka Status</h3>
-                <p>Confluent Cloud → ACTIVE</p>
+
+                <div class="kafka-box">
+                    <span>Broker</span>
+                    <b>Connected</b>
+                </div>
+
+                <div class="kafka-box">
+                    <span>Topic</span>
+                    <b>logs-topic</b>
+                </div>
+
+                <div class="kafka-box">
+                    <span>Consumer Group</span>
+                    <b>logstreamx-worker-group</b>
+                </div>
+
             </div>
+
         </div>
 
         <!-- SETTINGS -->
-        <div id="settings" style="display:none">
+        <div id="settings" class="tab">
+
             <div class="card">
                 <h3>Settings</h3>
-                <p>Configuration Panel Coming Soon ⚙</p>
+
+                <div class="setting">API Status: <b>Running</b></div>
+                <div class="setting">Database: <b>SQL Server</b></div>
+                <div class="setting">Environment: <b>Production</b></div>
+
             </div>
+
         </div>
 
     </div>
 
     <script>
 
-        const API = window.location.origin;
         let chart;
 
-        function show(tab) {
-            document.getElementById("dashboard").style.display = tab === "dashboard" ? "block" : "none";
-            document.getElementById("logs").style.display = tab === "logs" ? "block" : "none";
-            document.getElementById("kafka").style.display = tab === "kafka" ? "block" : "none";
-            document.getElementById("settings").style.display = tab === "settings" ? "block" : "none";
+        function openTab(tabId) {
+
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            document.getElementById(tabId).classList.add("active");
+
+            document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+            event.target.classList.add("active");
         }
 
         async function loadLogs() {
 
-            try {
-                const res = await fetch(API + "/api/logs");
-                const data = await res.json();
+            const res = await fetch('/api/logs');
+            const data = await res.json();
 
-                if (!Array.isArray(data)) {
-                    document.getElementById("logList").innerHTML = "API Error";
-                    return;
-                }
+            document.getElementById("total").innerText = data.length;
 
-                document.getElementById("total").innerText = data.length;
+            let html = [];
+            let labels = [];
+            let counts = [];
 
-                document.getElementById("logList").innerHTML =
-                    data.map(x => `
-                    <div class="log">
-                        <b>${x.message}</b><br>
-                        <small>${x.eventId} | ${x.source} | ${x.createdAt}</small>
+            data.forEach((x, i) => {
+
+                labels.push(new Date(x.createdAt).toLocaleTimeString());
+                counts.push(i + 1);
+
+                html.push(`
+                <div class="log">
+                    <div><b>${x.message}</b></div>
+                    <div style="display:flex;justify-content:space-between;margin-top:6px;">
+                        <span class="badge">${x.eventId}</span>
+                        <span style="font-size:12px;color:#94a3b8">
+                            ${new Date(x.createdAt).toLocaleString()}
+                        </span>
                     </div>
-                `).join("");
+                </div>
+            `);
+            });
 
-                drawChart(data);
+            document.getElementById("logList").innerHTML = html.join("");
 
-            } catch (e) {
-                console.log(e);
-            }
+            drawChart(labels, counts);
         }
 
-        function drawChart(data) {
+        function drawChart(labels, data) {
 
-            const ctx = document.getElementById("chart");
+            const ctx = document.getElementById('chart');
 
             if (chart) chart.destroy();
 
             chart = new Chart(ctx, {
-                type: "line",
+                type: 'line',
                 data: {
-                    labels: data.map((_, i) => i),
+                    labels: labels,
                     datasets: [{
-                        label: "Logs",
-                        data: data.map((_, i) => i + 1),
-                        borderColor: "#38bdf8"
+                        label: 'Logs',
+                        data: data,
+                        borderColor: '#38bdf8',
+                        tension: 0.4
                     }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: false } }
                 }
             });
         }
