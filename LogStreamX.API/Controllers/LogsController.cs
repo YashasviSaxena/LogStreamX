@@ -31,8 +31,7 @@ namespace LogStreamX.API.Controllers
             {
                 return StatusCode(500, new
                 {
-                    error = ex.Message,
-                    stack = ex.StackTrace
+                    error = ex.Message
                 });
             }
         }

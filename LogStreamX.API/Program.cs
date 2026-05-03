@@ -1,12 +1,22 @@
-﻿using Microsoft.EntityFrameworkCore;
-using LogStreamX.Infrastructure.Data;
+﻿using LogStreamX.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DB
-builder.Services.AddDbContext<LogDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
+// Detect Render environment
+var isRender = Environment.GetEnvironmentVariable("RENDER") != null;
+
+// DB SWITCH
+if (isRender)
+{
+    builder.Services.AddDbContext<LogDbContext>(options =>
+        options.UseInMemoryDatabase("LogStreamXDb"));
+}
+else
+{
+    builder.Services.AddDbContext<LogDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
 
 // Controllers
 builder.Services.AddControllers();
@@ -15,20 +25,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// CORS (IMPORTANT for UI)
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("open", policy =>
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod());
-});
-
 var app = builder.Build();
 
-app.UseCors("open");
-
-app.UseDefaultFiles(); // index.html
+app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseSwagger();
