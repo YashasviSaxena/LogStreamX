@@ -68,7 +68,7 @@ public class KafkaConsumerService : BackgroundService
                     };
 
                     // ✅ FINAL FIX (USE Logs)
-                    db.Logs.Add(entity);
+                    db.LogEntries.Add(entity);
 
                     await db.SaveChangesAsync();
 

@@ -1,7 +1,6 @@
-﻿using Confluent.Kafka;
-using LogStreamX.Contracts;
+﻿using LogStreamX.Infrastructure.Data;
+using LogStreamX.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 
 namespace LogStreamX.API.Controllers
 {
@@ -9,37 +8,22 @@ namespace LogStreamX.API.Controllers
     [Route("api/[controller]")]
     public class LogPushController : ControllerBase
     {
-        private readonly IConfiguration _config;
+        private readonly LogDbContext _db;
 
-        public LogPushController(IConfiguration config)
+        public LogPushController(LogDbContext db)
         {
-            _config = config;
+            _db = db;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Push([FromBody] LogDto dto)
+        public async Task<IActionResult> PushLog([FromBody] LogEntry log)
         {
-            var producerConfig = new ProducerConfig
-            {
-                BootstrapServers = _config["Kafka:BootstrapServers"],
+            log.CreatedAt = DateTime.UtcNow;
 
-                // 🔥 REQUIRED FOR CONFLUENT CLOUD
-                SecurityProtocol = SecurityProtocol.SaslSsl,
-                SaslMechanism = SaslMechanism.Plain,
-                SaslUsername = _config["Kafka:ApiKey"],
-                SaslPassword = _config["Kafka:ApiSecret"]
-            };
+            _db.LogEntries.Add(log);
+            await _db.SaveChangesAsync();
 
-            using var producer = new ProducerBuilder<Null, string>(producerConfig).Build();
-
-            var json = JsonSerializer.Serialize(dto);
-
-            await producer.ProduceAsync(_config["Kafka:Topic"], new Message<Null, string>
-            {
-                Value = json
-            });
-
-            return Ok(new { status = "received", dto });
+            return Ok(new { message = "Log stored successfully" });
         }
     }
 }
