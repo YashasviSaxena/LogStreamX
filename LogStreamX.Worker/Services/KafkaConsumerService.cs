@@ -1,12 +1,12 @@
 ﻿using Confluent.Kafka;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 using LogStreamX.Contracts;
 using LogStreamX.Infrastructure.Data;
 using LogStreamX.Infrastructure.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace LogStreamX.Worker.Services
 {
@@ -31,7 +31,7 @@ namespace LogStreamX.Worker.Services
             return Task.Run(() => Consume(stoppingToken), stoppingToken);
         }
 
-        private void Consume(CancellationToken cancellationToken)
+        private void Consume(CancellationToken token)
         {
             var config = new ConsumerConfig
             {
@@ -44,38 +44,30 @@ namespace LogStreamX.Worker.Services
             using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
             consumer.Subscribe(_config["Kafka:Topic"]);
 
-            _logger.LogInformation("Kafka Consumer Started 🚀");
+            _logger.LogInformation("🔥 Kafka Consumer started");
 
-            while (!cancellationToken.IsCancellationRequested)
+            while (!token.IsCancellationRequested)
             {
-                try
+                var cr = consumer.Consume(token);
+
+                var dto = JsonSerializer.Deserialize<LogDto>(cr.Message.Value);
+
+                if (dto == null) continue;
+
+                using var scope = _scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<LogDbContext>();
+
+                db.LogEntries.Add(new LogEntry
                 {
-                    var cr = consumer.Consume(cancellationToken);
+                    EventId = dto.EventId,
+                    Message = dto.Message,
+                    Source = dto.Source,
+                    CreatedAt = dto.CreatedAt
+                });
 
-                    var logDto = JsonSerializer.Deserialize<LogDto>(cr.Message.Value);
+                db.SaveChanges();
 
-                    if (logDto == null) continue;
-
-                    using var scope = _scopeFactory.CreateScope();
-                    var db = scope.ServiceProvider.GetRequiredService<LogDbContext>();
-
-                    var entity = new LogEntry
-                    {
-                        EventId = logDto.EventId,
-                        Message = logDto.Message,
-                        Source = logDto.Source,
-                        CreatedAt = logDto.CreatedAt
-                    };
-
-                    db.LogEntries.Add(entity);
-                    db.SaveChanges();
-
-                    _logger.LogInformation("Saved log: {EventId}", entity.EventId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Kafka processing error");
-                }
+                _logger.LogInformation("✅ Saved: {id}", dto.EventId);
             }
         }
     }

@@ -1,4 +1,3 @@
-using LogStreamX.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
 using LogStreamX.Contracts;
 
@@ -11,6 +10,7 @@ namespace LogStreamX.API.Controllers
         [HttpPost]
         public IActionResult Push(LogDto dto)
         {
+            // In real system: send to Kafka
             return Ok(new
             {
                 status = "received",

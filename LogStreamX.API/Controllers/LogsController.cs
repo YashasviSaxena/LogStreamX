@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using LogStreamX.Infrastructure.Data;
+using LogStreamX.Infrastructure.Models;
+using LogStreamX.Contracts;
 
 namespace LogStreamX.API.Controllers
 {
@@ -6,19 +9,40 @@ namespace LogStreamX.API.Controllers
     [Route("api/[controller]")]
     public class LogsController : ControllerBase
     {
-        private static readonly List<object> _logs = new();
+        private readonly LogDbContext _db;
 
+        public LogsController(LogDbContext db)
+        {
+            _db = db;
+        }
+
+        // GET: /api/logs
         [HttpGet]
         public IActionResult GetLogs()
         {
-            return Ok(_logs);
+            var logs = _db.LogEntries
+                .OrderByDescending(x => x.CreatedAt)
+                .ToList();
+
+            return Ok(logs);
         }
 
+        // POST: /api/logs (manual test fallback)
         [HttpPost]
-        public IActionResult AddLog([FromBody] object log)
+        public IActionResult PostLog(LogDto dto)
         {
-            _logs.Add(log);
-            return Ok(new { status = "stored in memory" });
+            var entity = new LogEntry
+            {
+                EventId = dto.EventId,
+                Message = dto.Message,
+                Source = dto.Source,
+                CreatedAt = dto.CreatedAt
+            };
+
+            _db.LogEntries.Add(entity);
+            _db.SaveChanges();
+
+            return Ok(new { status = "saved", entity });
         }
     }
 }
