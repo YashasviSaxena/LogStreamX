@@ -1,75 +1,87 @@
 ﻿using Confluent.Kafka;
-using System.Text.Json;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using LogStreamX.Contracts;
 using LogStreamX.Infrastructure.Data;
 using LogStreamX.Infrastructure.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
-namespace LogStreamX.Worker.Services;
-
-public class KafkaConsumerService : BackgroundService
+namespace LogStreamX.Worker.Services
 {
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<KafkaConsumerService> _logger;
-    private readonly IConfiguration _config;
-
-    public KafkaConsumerService(
-        IServiceScopeFactory scopeFactory,
-        ILogger<KafkaConsumerService> logger,
-        IConfiguration config)
+    public class KafkaConsumerService : BackgroundService
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
-        _config = config;
-    }
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<KafkaConsumerService> _logger;
+        private readonly IConfiguration _config;
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        return Task.Run(() => Consume(stoppingToken), stoppingToken);
-    }
-
-    private void Consume(CancellationToken token)
-    {
-        var config = new ConsumerConfig
+        public KafkaConsumerService(
+            IServiceScopeFactory scopeFactory,
+            ILogger<KafkaConsumerService> logger,
+            IConfiguration config)
         {
-            BootstrapServers = _config["Kafka:BootstrapServers"],
-            GroupId = _config["Kafka:GroupId"],
-            AutoOffsetReset = AutoOffsetReset.Earliest
-        };
+            _scopeFactory = scopeFactory;
+            _logger = logger;
+            _config = config;
+        }
 
-        using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
-        consumer.Subscribe(_config["Kafka:Topic"]);
-
-        _logger.LogInformation("Kafka started");
-
-        while (!token.IsCancellationRequested)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            try
+            await Task.Run(() => Consume(stoppingToken), stoppingToken);
+        }
+
+        private void Consume(CancellationToken cancellationToken)
+        {
+            var consumerConfig = new ConsumerConfig
             {
-                var msg = consumer.Consume(token);
+                BootstrapServers = _config["Kafka:BootstrapServers"],
+                GroupId = _config["Kafka:GroupId"],
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                EnableAutoCommit = true,
 
-                var dto = JsonSerializer.Deserialize<LogDto>(msg.Message.Value);
+                // 🔐 REQUIRED for Confluent Cloud
+                SecurityProtocol = SecurityProtocol.SaslSsl,
+                SaslMechanism = SaslMechanism.Plain,
+                SaslUsername = _config["Kafka:ApiKey"],
+                SaslPassword = _config["Kafka:ApiSecret"]
+            };
 
-                if (dto == null) continue;
+            using var consumer = new ConsumerBuilder<Ignore, string>(consumerConfig).Build();
+            consumer.Subscribe(_config["Kafka:Topic"]);
 
-                using var scope = _scopeFactory.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<LogDbContext>();
+            _logger.LogInformation("Kafka Consumer Started 🚀");
 
-                db.LogEntries.Add(new LogEntry
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
                 {
-                    EventId = dto.EventId ?? "",
-                    Message = dto.Message ?? "",
-                    Source = dto.Source ?? "",
-                    CreatedAt = dto.CreatedAt
-                });
+                    var cr = consumer.Consume(cancellationToken);
 
-                db.SaveChanges();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Kafka error");
+                    var logDto = JsonSerializer.Deserialize<LogDto>(cr.Message.Value);
+
+                    if (logDto == null) continue;
+
+                    using var scope = _scopeFactory.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<LogDbContext>();
+
+                    var entity = new LogEntry
+                    {
+                        EventId = logDto.EventId ?? "",
+                        Message = logDto.Message ?? "",
+                        CreatedAt = logDto.CreatedAt,
+                        Source = logDto.Source ?? ""
+                    };
+
+                    db.LogEntries.Add(entity);
+                    db.SaveChanges();
+
+                    _logger.LogInformation("Saved log: {EventId}", entity.EventId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Kafka error");
+                }
             }
         }
     }

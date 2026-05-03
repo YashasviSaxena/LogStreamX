@@ -1,12 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
-using LogStreamX.Infrastructure.Data;
+﻿using LogStreamX.Infrastructure.Data;
 using LogStreamX.Worker.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddDbContext<LogDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// DB
+builder.Services.AddDbContext<LogDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
+// Kafka worker
 builder.Services.AddHostedService<KafkaConsumerService>();
 
-builder.Build().Run();
+var app = builder.Build();
+app.Run();
