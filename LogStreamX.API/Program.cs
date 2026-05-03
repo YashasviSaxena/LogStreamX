@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 // ======================
 builder.Services.AddControllers();
 
+// IMPORTANT: Static files for index.html
+builder.Services.AddDirectoryBrowser();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
@@ -19,22 +21,27 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// CORS (UI + Swagger FIX)
+// CORS FIX
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowAll", p =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        p.AllowAnyOrigin()
+         .AllowAnyHeader()
+         .AllowAnyMethod();
     });
 });
 
 var app = builder.Build();
 
 // ======================
-// PIPELINE
+// PIPELINE ORDER (VERY IMPORTANT)
 // ======================
+
+// MUST serve wwwroot (fixes index.html 404)
+app.UseDefaultFiles();   // 👈 IMPORTANT
+app.UseStaticFiles();    // 👈 IMPORTANT
+
 app.UseSwagger();
 
 app.UseSwaggerUI(c =>
@@ -51,13 +58,13 @@ app.MapControllers();
 
 
 // ======================
-// IN-MEMORY LOG STORAGE (NO DB)
+// IN-MEMORY STORAGE
 // ======================
 var logs = new List<LogEvent>();
 
 
 // ======================
-// PUSH LOG (Swagger uses this)
+// API: PUSH LOG
 // ======================
 app.MapPost("/api/LogPush", (LogEvent log) =>
 {
@@ -66,19 +73,19 @@ app.MapPost("/api/LogPush", (LogEvent log) =>
         EventId = log.EventId,
         Message = log.Message,
         Source = log.Source,
-        CreatedAt = DateTime.UtcNow   // ALWAYS SERVER TIME
+        CreatedAt = DateTime.UtcNow
     });
 
     return Results.Ok(new
     {
-        status = "Sent Successfully (Memory Mode)",
+        status = "Sent OK",
         eventId = log.EventId
     });
 });
 
 
 // ======================
-// GET LOGS (UI uses this)
+// API: GET LOGS
 // ======================
 app.MapGet("/api/logs", () =>
 {
@@ -87,12 +94,11 @@ app.MapGet("/api/logs", () =>
 
 
 // ======================
-// HEALTH CHECK (Render safe)
+// HEALTH CHECK
 // ======================
 app.MapGet("/health", () => new
 {
     status = "OK",
-    service = "LogStreamX",
     time = DateTime.UtcNow
 });
 
