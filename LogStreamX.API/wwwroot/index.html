@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <title>LogStreamX Observability</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body {
@@ -19,10 +17,10 @@
         }
 
         .sidebar {
-            width: 240px;
+            width: 230px;
             background: #0f172a;
-            padding: 20px;
             height: 100vh;
+            padding: 20px;
         }
 
         .logo {
@@ -32,10 +30,10 @@
         }
 
         .nav div {
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
+            padding: 10px;
+            margin: 6px 0;
             cursor: pointer;
+            border-radius: 8px;
         }
 
             .nav div:hover {
@@ -52,16 +50,6 @@
             padding: 15px;
             border-radius: 12px;
             margin-bottom: 15px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .stat {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
         }
 
         .log {
@@ -97,11 +85,10 @@
         <div class="logo">🚀 LogStreamX</div>
 
         <div class="nav">
-            <div onclick="showTab('dashboard')"><i class="fa fa-chart-line"></i> Dashboard</div>
-            <div onclick="showTab('logs')"><i class="fa fa-database"></i> Logs</div>
-            <div onclick="showTab('kafka')"><i class="fa fa-bolt"></i> Kafka</div>
-            <div onclick="showTab('settings')"><i class="fa fa-cog"></i> Settings</div>
-            <div onclick="showTab('flow')"><i class="fa fa-project-diagram"></i> Flow</div>
+            <div onclick="show('dashboard')">📊 Dashboard</div>
+            <div onclick="show('logs')">📄 Logs</div>
+            <div onclick="show('kafka')">⚡ Kafka</div>
+            <div onclick="show('settings')">⚙️ Settings</div>
         </div>
     </div>
 
@@ -109,81 +96,40 @@
 
         <!-- DASHBOARD -->
         <div id="dashboard">
-            <h2>📊 Observability Dashboard</h2>
+            <h2>📊 Dashboard</h2>
 
             <div class="card">
-                <div class="stat">
-                    <span>Total Logs</span>
-                    <b id="total">0</b>
-                </div>
-
-                <div class="stat">
-                    <span>Status</span>
-                    <b id="apiStatus" class="yellow">Checking...</b>
-                </div>
-
-                <div class="stat">
-                    <span>Kafka</span>
-                    <b class="green">Active</b>
-                </div>
-
-                <div class="stat">
-                    <span>Worker</span>
-                    <b class="green">Running</b>
-                </div>
+                <p>Total Logs: <b id="total">0</b></p>
+                <p>Status: <b id="status" class="yellow">Checking...</b></p>
             </div>
 
             <div class="card">
-                <h3>Traffic</h3>
                 <canvas id="chart"></canvas>
             </div>
         </div>
 
         <!-- LOGS -->
-        <div id="logs" class="hidden">
+        <div id="logs" style="display:none;">
             <h2>📄 Logs</h2>
-            <div id="logContainer"></div>
+            <div id="logBox"></div>
         </div>
 
         <!-- KAFKA -->
-        <div id="kafka" class="hidden">
-            <h2>⚡ Kafka Monitoring</h2>
-
+        <div id="kafka" style="display:none;">
+            <h2>⚡ Kafka</h2>
             <div class="card">
-                <div class="stat"><span>Status</span><b class="green">Active</b></div>
-                <div class="stat"><span>Topic</span><b>logs-topic</b></div>
-                <div class="stat"><span>Pipeline</span><b>API → Kafka → Worker → DB</b></div>
+                <p>Pipeline: API → Kafka → Worker → DB</p>
+                <p>Status: <b class="green">Active</b></p>
             </div>
         </div>
 
         <!-- SETTINGS -->
-        <div id="settings" class="hidden">
+        <div id="settings" style="display:none;">
             <h2>⚙️ Settings</h2>
 
             <div class="card">
-                <div class="stat">
-                    <span>API</span>
-                    <b>https://logstreamx.onrender.com/api/logs</b>
-                </div>
-
-                <div class="stat">
-                    <span>Swagger</span>
-                    <b><a href="/swagger" style="color:#38bdf8;">Open</a></b>
-                </div>
-            </div>
-        </div>
-
-        <!-- FLOW -->
-        <div id="flow" class="hidden">
-            <h2>🔄 Flow</h2>
-
-            <div class="card">
-                <ol>
-                    <li>Swagger → API</li>
-                    <li>API → Kafka</li>
-                    <li>Worker → DB</li>
-                    <li>UI → Fetch Logs</li>
-                </ol>
+                <p>API: https://logstreamx.onrender.com/api/Logs</p>
+                <p>Swagger: /swagger</p>
             </div>
         </div>
 
@@ -191,63 +137,63 @@
 
     <script>
 
-        const API = "https://logstreamx.onrender.com";
+        const API = "https://logstreamx.onrender.com/api/Logs";
 
         let chart;
 
-        function showTab(tab) {
-            ['dashboard', 'logs', 'kafka', 'settings', 'flow']
-                .forEach(t => document.getElementById(t).classList.add('hidden'));
+        function show(tab) {
+            document.getElementById("dashboard").style.display = "none";
+            document.getElementById("logs").style.display = "none";
+            document.getElementById("kafka").style.display = "none";
+            document.getElementById("settings").style.display = "none";
 
-            document.getElementById(tab).classList.remove('hidden');
+            document.getElementById(tab).style.display = "block";
         }
 
         async function loadLogs() {
             try {
-                const res = await fetch(API + "/api/Logs", {
-                    cache: "no-store"
-                });
+                const res = await fetch(API, { cache: "no-store" });
 
-                if (!res.ok) throw new Error("API error");
+                if (!res.ok) throw new Error("API failed");
 
                 const data = await res.json();
 
-                console.log("LOGS:", data);
-
-                document.getElementById("apiStatus").innerText = "Healthy";
-                document.getElementById("apiStatus").className = "green";
+                document.getElementById("status").innerText = "Healthy";
+                document.getElementById("status").className = "green";
 
                 document.getElementById("total").innerText = data.length;
 
                 let html = "";
                 let labels = [];
-                let counts = [];
+                let values = [];
 
-                if (data.length === 0) {
+                if (!data.length) {
                     html = "<p style='color:#facc15'>No logs found</p>";
                 }
 
                 data.forEach((x, i) => {
 
                     labels.push(new Date(x.createdAt).toLocaleTimeString());
-                    counts.push(i + 1);
+                    values.push(i + 1);
 
                     html += `
                     <div class="log">
                         <b>${x.message}</b>
-                        <div class="meta">${x.eventId} | ${new Date(x.createdAt).toLocaleString()}</div>
+                        <div class="meta">
+                            ${x.eventId} | ${new Date(x.createdAt).toLocaleString()}
+                        </div>
                     </div>
                 `;
                 });
 
-                document.getElementById("logContainer").innerHTML = html;
+                document.getElementById("logBox").innerHTML = html;
 
-                drawChart(labels, counts);
+                drawChart(labels, values);
 
             } catch (err) {
-                console.error(err);
-                document.getElementById("apiStatus").innerText = "Down";
-                document.getElementById("apiStatus").className = "red";
+                console.log(err);
+                document.getElementById("status").innerText = "DOWN";
+                document.getElementById("status").className = "red";
             }
         }
 
