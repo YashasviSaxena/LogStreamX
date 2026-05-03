@@ -6,11 +6,11 @@ var builder = Host.CreateApplicationBuilder(args);
 
 // DB
 builder.Services.AddDbContext<LogDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Kafka worker
+// Kafka Consumer
 builder.Services.AddHostedService<KafkaConsumerService>();
 
 var app = builder.Build();
+
 app.Run();

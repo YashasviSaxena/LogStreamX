@@ -1,36 +1,27 @@
-﻿using LogStreamX.Infrastructure.Data;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using LogStreamX.Infrastructure.Data;
 
-namespace LogStreamX.API.Controllers
+namespace LogStreamX.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class LogsController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class LogsController : ControllerBase
+    private readonly LogDbContext _context;
+
+    public LogsController(LogDbContext context)
     {
-        private readonly LogDbContext _db;
+        _context = context;
+    }
 
-        public LogsController(LogDbContext db)
-        {
-            _db = db;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetLogs()
+    {
+        var logs = await _context.Logs
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
 
-        [HttpGet]
-        public async Task<IActionResult> GetLogs()
-        {
-            try
-            {
-                var logs = await _db.LogEntries
-                    .OrderByDescending(x => x.CreatedAt)
-                    .Take(100)
-                    .ToListAsync();
-
-                return Ok(logs);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
-        }
+        return Ok(logs);
     }
 }

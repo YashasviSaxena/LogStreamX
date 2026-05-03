@@ -1,28 +1,58 @@
 @echo off
-title LogStreamX SYSTEM STARTER (CLOUD MODE)
+title LogStreamX SYSTEM STARTER (LOCAL + CLOUD KAFKA)
 
-echo ================================
-echo STARTING API
-echo ================================
+echo =========================================
+echo 🚀 STARTING LOGSTREAMX SYSTEM
+echo =========================================
 
-start cmd /k "cd /d C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.API && dotnet run"
+echo.
+echo 📦 Mode:
+echo - API: LOCAL
+echo - Worker: LOCAL
+echo - DB: LOCAL (SQL Server)
+echo - Kafka: CONFLUENT CLOUD ☁️
+echo.
 
-timeout /t 5
+echo =========================================
+echo STARTING API (http://localhost:5000)
+echo =========================================
 
-echo ================================
-echo STARTING WORKER
-echo ================================
+start "API" cmd /k "cd /d C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.API && dotnet run"
 
-start cmd /k "cd /d C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Worker && dotnet run"
+timeout /t 5 >nul
 
-echo ================================
-echo USING CONFLUENT CLOUD KAFKA ☁️
-echo ================================
-echo Topic: logs-topic
-echo Broker: pkc-921jm...
+echo =========================================
+echo STARTING WORKER (Kafka Consumer)
+echo =========================================
 
-echo ================================
-echo ALL SERVICES STARTED 🚀
-echo ================================
+start "Worker" cmd /k "cd /d C:\Users\hp\OneDrive\Desktop\Yashasvi\NetPractice\LogStreamX\LogStreamX.Worker && dotnet run"
+
+timeout /t 3 >nul
+
+echo =========================================
+echo 🔗 SYSTEM ENDPOINTS
+echo =========================================
+echo Swagger: http://localhost:5000/swagger
+echo API Logs: http://localhost:5000/api/logs
+echo UI: http://localhost:5000/index.html
+
+echo =========================================
+echo 🧪 TEST FLOW
+echo =========================================
+echo 1. Open Swagger
+echo 2. POST /api/LogPush
+echo 3. Watch Worker console (Saved log)
+echo 4. Refresh UI
+
+echo =========================================
+echo ⚠️ NOTE
+echo =========================================
+echo This setup will NOT show logs on:
+echo https://logstreamx.onrender.com
+echo (Different environment)
+
+echo =========================================
+echo ✅ SYSTEM READY 🚀
+echo =========================================
 
 pause
