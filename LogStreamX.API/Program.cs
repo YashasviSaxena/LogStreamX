@@ -1,13 +1,15 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using LogStreamX.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers only
+// -------------------- SERVICES --------------------
+
+// Controllers
 builder.Services.AddControllers();
 
-// DbContext (FIX REQUIRED)
+// DB
 builder.Services.AddDbContext<LogDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
@@ -23,7 +25,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// CORS
+// CORS (optional but useful for frontend later)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", p =>
@@ -36,13 +38,23 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// -------------------- PIPELINE --------------------
+
+// Swagger (IMPORTANT FOR RENDER)
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// Static files (fixes /index.html 404 if present)
+app.UseStaticFiles();
+
+// CORS
 app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+// fallback (ONLY if you actually want index.html SPA support)
+app.MapFallbackToFile("index.html");
 
 app.Run();
