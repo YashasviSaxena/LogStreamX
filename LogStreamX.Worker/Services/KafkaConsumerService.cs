@@ -1,56 +1,56 @@
 ﻿using Confluent.Kafka;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using LogStreamX.Contracts;
 using LogStreamX.Infrastructure.Data;
 using LogStreamX.Infrastructure.Models;
 
-namespace LogStreamX.Worker.Services
+namespace LogStreamX.Worker.Services;
+
+public class KafkaConsumerService : BackgroundService
 {
-    public class KafkaConsumerService : BackgroundService
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<KafkaConsumerService> _logger;
+    private readonly IConfiguration _config;
+
+    public KafkaConsumerService(
+        IServiceScopeFactory scopeFactory,
+        ILogger<KafkaConsumerService> logger,
+        IConfiguration config)
     {
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<KafkaConsumerService> _logger;
-        private readonly IConfiguration _config;
+        _scopeFactory = scopeFactory;
+        _logger = logger;
+        _config = config;
+    }
 
-        public KafkaConsumerService(
-            IServiceScopeFactory scopeFactory,
-            ILogger<KafkaConsumerService> logger,
-            IConfiguration config)
-        {
-            _scopeFactory = scopeFactory;
-            _logger = logger;
-            _config = config;
-        }
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        return Task.Run(() => Consume(stoppingToken), stoppingToken);
+    }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    private void Consume(CancellationToken token)
+    {
+        var config = new ConsumerConfig
         {
-            return Task.Run(() => Consume(stoppingToken), stoppingToken);
-        }
+            BootstrapServers = _config["Kafka:BootstrapServers"],
+            GroupId = _config["Kafka:GroupId"],
+            AutoOffsetReset = AutoOffsetReset.Earliest
+        };
 
-        private void Consume(CancellationToken token)
+        using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
+        consumer.Subscribe(_config["Kafka:Topic"]);
+
+        _logger.LogInformation("Kafka started");
+
+        while (!token.IsCancellationRequested)
         {
-            var config = new ConsumerConfig
+            try
             {
-                BootstrapServers = _config["Kafka:BootstrapServers"],
-                GroupId = _config["Kafka:GroupId"],
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = true
-            };
+                var msg = consumer.Consume(token);
 
-            using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
-            consumer.Subscribe(_config["Kafka:Topic"]);
-
-            _logger.LogInformation("🔥 Kafka Consumer started");
-
-            while (!token.IsCancellationRequested)
-            {
-                var cr = consumer.Consume(token);
-
-                var dto = JsonSerializer.Deserialize<LogDto>(cr.Message.Value);
+                var dto = JsonSerializer.Deserialize<LogDto>(msg.Message.Value);
 
                 if (dto == null) continue;
 
@@ -59,15 +59,17 @@ namespace LogStreamX.Worker.Services
 
                 db.LogEntries.Add(new LogEntry
                 {
-                    EventId = dto.EventId,
-                    Message = dto.Message,
-                    Source = dto.Source,
+                    EventId = dto.EventId ?? "",
+                    Message = dto.Message ?? "",
+                    Source = dto.Source ?? "",
                     CreatedAt = dto.CreatedAt
                 });
 
                 db.SaveChanges();
-
-                _logger.LogInformation("✅ Saved: {id}", dto.EventId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Kafka error");
             }
         }
     }

@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
     <title>LogStreamX Observability</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     <style>
         body {
             margin: 0;
             font-family: Inter;
-            background: #0a0f1c;
+            background: #0b1220;
             color: #e5e7eb;
             display: flex;
         }
@@ -33,16 +33,17 @@
             margin-bottom: 25px;
         }
 
-        .menu div {
+        .nav-item {
             padding: 12px;
-            margin: 8px 0;
+            margin: 6px 0;
             border-radius: 10px;
             cursor: pointer;
             color: #94a3b8;
         }
 
-            .menu div:hover {
-                background: #1e293b;
+            .nav-item:hover,
+            .nav-item.active {
+                background: rgba(56,189,248,0.1);
                 color: white;
             }
 
@@ -76,7 +77,7 @@
             gap: 15px;
         }
 
-        /* CARDS */
+        /* CARD */
         .card {
             background: #111827;
             padding: 15px;
@@ -87,7 +88,7 @@
         /* LOGS */
         .logs {
             max-height: 520px;
-            overflow: auto;
+            overflow-y: auto;
         }
 
         .log {
@@ -115,91 +116,148 @@
             border-radius: 10px;
         }
 
-        /* FLOW BOX */
+        /* FLOW */
         .flow {
             font-size: 13px;
-            line-height: 1.6;
+            line-height: 1.8;
             color: #cbd5e1;
         }
+
+        /* HIDE SECTIONS */
+        .section {
+            display: none;
+        }
+
+            .section.active {
+                display: block;
+            }
     </style>
 </head>
 
 <body>
 
+    <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="logo">LogStreamX</div>
 
-        <div class="menu">
-            <div><i class="fa fa-chart-line"></i> Dashboard</div>
-            <div><i class="fa fa-database"></i> Logs</div>
-            <div><i class="fa fa-bolt"></i> Kafka</div>
-            <div><i class="fa fa-cog"></i> Settings</div>
-            <div><i class="fa fa-diagram-project"></i> Flow</div>
+        <div class="nav-item active" onclick="showTab('dashboard')">
+            <i class="fa fa-chart-line"></i> Dashboard
+        </div>
+
+        <div class="nav-item" onclick="showTab('logs')">
+            <i class="fa fa-database"></i> Logs
+        </div>
+
+        <div class="nav-item" onclick="showTab('kafka')">
+            <i class="fa fa-bolt"></i> Kafka
+        </div>
+
+        <div class="nav-item" onclick="showTab('flow')">
+            <i class="fa fa-diagram-project"></i> Flow
+        </div>
+
+        <div class="nav-item" onclick="showTab('settings')">
+            <i class="fa fa-cog"></i> Settings
         </div>
     </div>
 
+    <!-- MAIN -->
     <div class="main">
 
         <div class="header">
-            <h2>Observability Dashboard</h2>
-            <button class="btn" onclick="loadLogs()">Refresh</button>
+            <h2>LogStreamX Observability</h2>
+            <button class="btn" onclick="loadLogs()">
+                <i class="fa fa-refresh"></i> Refresh
+            </button>
         </div>
 
-        <div class="grid">
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="section active">
 
-            <!-- LOGS -->
-            <div class="card">
-                <h3>Live Logs</h3>
-                <div class="logs" id="logs"></div>
-            </div>
-
-            <!-- RIGHT PANEL -->
-            <div>
+            <div class="grid">
 
                 <div class="card">
-                    <h3>System Health</h3>
-
-                    <div class="stat">
-                        <span>Total Logs</span>
-                        <b id="total">0</b>
-                    </div>
-
-                    <div class="stat">
-                        <span>Kafka</span>
-                        <b style="color:#22c55e">Healthy</b>
-                    </div>
-
-                    <div class="stat">
-                        <span>Worker</span>
-                        <b style="color:#22c55e">Running</b>
-                    </div>
-
-                    <div class="stat">
-                        <span>API</span>
-                        <b style="color:#22c55e">Live</b>
-                    </div>
+                    <h3>Live Logs</h3>
+                    <div class="logs" id="logs"></div>
                 </div>
 
-                <div class="card" style="margin-top:15px;">
-                    <h3>Log Trend</h3>
-                    <canvas id="chart"></canvas>
-                </div>
+                <div>
 
+                    <div class="card">
+                        <h3>System Health</h3>
+
+                        <div class="stat">
+                            <span>Total Logs</span>
+                            <b id="total">0</b>
+                        </div>
+
+                        <div class="stat">
+                            <span>Kafka</span>
+                            <b style="color:#22c55e">Active</b>
+                        </div>
+
+                        <div class="stat">
+                            <span>Worker</span>
+                            <b style="color:#22c55e">Running</b>
+                        </div>
+
+                        <div class="stat">
+                            <span>API</span>
+                            <b style="color:#22c55e">Live</b>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top:15px;">
+                        <h3>Log Trend</h3>
+                        <canvas id="chart"></canvas>
+                    </div>
+
+                </div>
             </div>
         </div>
 
-        <!-- FLOW SECTION -->
-        <div class="card" style="margin-top:15px;">
-            <h3>End-to-End Flow (How it works)</h3>
+        <!-- LOGS TAB -->
+        <div id="logsTab" class="section">
+            <div class="card">
+                <h3>All Logs</h3>
+                <div class="logs" id="logsFull"></div>
+            </div>
+        </div>
 
-            <div class="flow">
-                1️⃣ Client → POST /api/LogPush (Swagger)<br>
-                2️⃣ API → pushes message to Kafka topic<br>
-                3️⃣ Kafka → stores event in log-stream<br>
-                4️⃣ Worker Service → consumes Kafka messages<br>
-                5️⃣ Worker → saves into SQL Server<br>
-                6️⃣ UI → fetches /api/Logs every 5 seconds<br>
-                7️⃣ Dashboard → shows real-time observability
+        <!-- KAFKA -->
+        <div id="kafka" class="section">
+            <div class="card">
+                <h3>Kafka Status</h3>
+                <p>Bootstrap: Active</p>
+                <p>Topic: logs-topic</p>
+                <p>Consumer Group: logstreamx-worker-group</p>
+            </div>
+        </div>
+
+        <!-- FLOW -->
+        <div id="flow" class="section">
+            <div class="card">
+                <h3>End-to-End Flow</h3>
+
+                <div class="flow">
+                    1. Swagger → POST /api/LogPush<br>
+                    2. API → sends event to Kafka topic<br>
+                    3. Kafka → streams message<br>
+                    4. Worker → consumes message<br>
+                    5. Worker → saves to SQL Server<br>
+                    6. UI → polls /api/Logs<br>
+                    7. Dashboard → visualizes observability
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="settings" class="section">
+            <div class="card">
+                <h3>Settings</h3>
+                <p>Environment: Production</p>
+                <p>API: /api/Logs</p>
+                <p>Refresh Interval: 5s</p>
             </div>
         </div>
 
@@ -209,37 +267,57 @@
 
         let chart;
 
+        function showTab(tab) {
+
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        }
+
         async function loadLogs() {
 
-            const res = await fetch('/api/Logs');
-            const data = await res.json();
+            try {
+                const res = await fetch('/api/Logs');
 
-            document.getElementById("total").innerText = data.length;
+                if (!res.ok) {
+                    console.error("API error:", res.status);
+                    return;
+                }
 
-            let html = [];
-            let labels = [];
-            let counts = [];
+                const data = await res.json();
 
-            data.forEach((x, i) => {
+                if (!Array.isArray(data)) return;
 
-                if (!x) return;
+                document.getElementById("total").innerText = data.length;
 
-                labels.push(new Date(x.createdAt).toLocaleTimeString());
-                counts.push(i + 1);
+                let html = "";
+                let labels = [];
+                let counts = [];
 
-                html.push(`
-            <div class="log">
-                <div>${x.message ?? "No message"}</div>
-                <div class="meta">
-                    <span>${x.eventId ?? "-"}</span>
-                    <span>${new Date(x.createdAt).toLocaleString()}</span>
-                </div>
-            </div>`);
-            });
+                data.forEach((x, i) => {
 
-            document.getElementById("logs").innerHTML = html.join("");
+                    labels.push(new Date(x.createdAt).toLocaleTimeString());
+                    counts.push(i + 1);
 
-            drawChart(labels, counts);
+                    html += `
+                <div class="log">
+                    <div>${x.message ?? "empty log"}</div>
+                    <div class="meta">
+                        <span>${x.eventId ?? "-"}</span>
+                        <span>${new Date(x.createdAt).toLocaleString()}</span>
+                    </div>
+                </div>`;
+                });
+
+                document.getElementById("logs").innerHTML = html;
+                document.getElementById("logsFull").innerHTML = html;
+
+                drawChart(labels, counts);
+
+            } catch (err) {
+                console.error("UI error:", err);
+            }
         }
 
         function drawChart(labels, data) {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using LogStreamX.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using LogStreamX.Infrastructure.Data;
 
 namespace LogStreamX.API.Controllers;
 
@@ -16,13 +16,24 @@ public class LogsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetLogs()
+    public async Task<IActionResult> Get()
     {
-        var logs = await _db.LogEntries
-            .OrderByDescending(x => x.CreatedAt)
-            .Take(200)
-            .ToListAsync();
+        try
+        {
+            var logs = await _db.LogEntries
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(200)
+                .ToListAsync();
 
-        return Ok(logs);
+            return Ok(logs);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                error = "Database error",
+                message = ex.Message
+            });
+        }
     }
 }
