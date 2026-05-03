@@ -2,26 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>LogStreamX Dashboard</title>
+    <title>LogStreamX Observability</title>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
         body {
             margin: 0;
             font-family: Inter;
             background: #0b1220;
-            color: white;
+            color: #e5e7eb;
             display: flex;
         }
 
         .sidebar {
-            width: 220px;
+            width: 240px;
             background: #0f172a;
-            height: 100vh;
             padding: 20px;
+            height: 100vh;
         }
+
+        .logo {
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 20px;
+        }
+
+        .nav div {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+            .nav div:hover {
+                background: #1e293b;
+            }
 
         .main {
             flex: 1;
@@ -31,15 +50,31 @@
         .card {
             background: #111827;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 15px;
         }
 
-        .log {
-            padding: 10px;
-            background: #0f172a;
-            border-left: 3px solid #38bdf8;
+        .hidden {
+            display: none;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
             margin-bottom: 10px;
+        }
+
+        .log {
+            background: #0f172a;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid #38bdf8;
+            border-radius: 6px;
+        }
+
+        .meta {
+            font-size: 12px;
+            color: #94a3b8;
         }
 
         .green {
@@ -49,31 +84,107 @@
         .red {
             color: #ef4444;
         }
+
+        .yellow {
+            color: #facc15;
+        }
     </style>
 </head>
 
 <body>
 
     <div class="sidebar">
-        <h2>🚀 LogStreamX</h2>
+        <div class="logo">🚀 LogStreamX</div>
+
+        <div class="nav">
+            <div onclick="showTab('dashboard')"><i class="fa fa-chart-line"></i> Dashboard</div>
+            <div onclick="showTab('logs')"><i class="fa fa-database"></i> Logs</div>
+            <div onclick="showTab('kafka')"><i class="fa fa-bolt"></i> Kafka</div>
+            <div onclick="showTab('settings')"><i class="fa fa-cog"></i> Settings</div>
+            <div onclick="showTab('flow')"><i class="fa fa-project-diagram"></i> Flow</div>
+        </div>
     </div>
 
     <div class="main">
 
-        <h2>📊 Dashboard</h2>
+        <!-- DASHBOARD -->
+        <div id="dashboard">
+            <h2>📊 Observability Dashboard</h2>
 
-        <div class="card">
-            <p>Total Logs: <b id="total">0</b></p>
-            <p>Status: <b id="status">Loading...</b></p>
+            <div class="card">
+                <div class="stat">
+                    <span>Total Logs</span>
+                    <b id="total">0</b>
+                </div>
+
+                <div class="stat">
+                    <span>Status</span>
+                    <b id="apiStatus" class="yellow">Checking...</b>
+                </div>
+
+                <div class="stat">
+                    <span>Kafka</span>
+                    <b class="green">Active</b>
+                </div>
+
+                <div class="stat">
+                    <span>Worker</span>
+                    <b class="green">Running</b>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Traffic</h3>
+                <canvas id="chart"></canvas>
+            </div>
         </div>
 
-        <div class="card">
-            <canvas id="chart"></canvas>
+        <!-- LOGS -->
+        <div id="logs" class="hidden">
+            <h2>📄 Logs</h2>
+            <div id="logContainer"></div>
         </div>
 
-        <div class="card">
-            <h3>Logs</h3>
-            <div id="logs"></div>
+        <!-- KAFKA -->
+        <div id="kafka" class="hidden">
+            <h2>⚡ Kafka Monitoring</h2>
+
+            <div class="card">
+                <div class="stat"><span>Status</span><b class="green">Active</b></div>
+                <div class="stat"><span>Topic</span><b>logs-topic</b></div>
+                <div class="stat"><span>Pipeline</span><b>API → Kafka → Worker → DB</b></div>
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="settings" class="hidden">
+            <h2>⚙️ Settings</h2>
+
+            <div class="card">
+                <div class="stat">
+                    <span>API</span>
+                    <b>https://logstreamx.onrender.com/api/logs</b>
+                </div>
+
+                <div class="stat">
+                    <span>Swagger</span>
+                    <b><a href="/swagger" style="color:#38bdf8;">Open</a></b>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLOW -->
+        <div id="flow" class="hidden">
+            <h2>🔄 Flow</h2>
+
+            <div class="card">
+                <ol>
+                    <li>Swagger → API</li>
+                    <li>API → Kafka</li>
+                    <li>Worker → DB</li>
+                    <li>UI → Fetch Logs</li>
+                </ol>
+            </div>
         </div>
 
     </div>
@@ -84,59 +195,77 @@
 
         let chart;
 
-        async function loadLogs() {
+        function showTab(tab) {
+            ['dashboard', 'logs', 'kafka', 'settings', 'flow']
+                .forEach(t => document.getElementById(t).classList.add('hidden'));
 
+            document.getElementById(tab).classList.remove('hidden');
+        }
+
+        async function loadLogs() {
             try {
-                const res = await fetch(API + "/api/logs", {
+                const res = await fetch(API + "/api/Logs", {
                     cache: "no-store"
                 });
 
+                if (!res.ok) throw new Error("API error");
+
                 const data = await res.json();
 
-                document.getElementById("status").innerText = "Healthy";
-                document.getElementById("status").className = "green";
+                console.log("LOGS:", data);
+
+                document.getElementById("apiStatus").innerText = "Healthy";
+                document.getElementById("apiStatus").className = "green";
 
                 document.getElementById("total").innerText = data.length;
 
-                let html = [];
+                let html = "";
                 let labels = [];
                 let counts = [];
 
+                if (data.length === 0) {
+                    html = "<p style='color:#facc15'>No logs found</p>";
+                }
+
                 data.forEach((x, i) => {
+
                     labels.push(new Date(x.createdAt).toLocaleTimeString());
                     counts.push(i + 1);
 
-                    html.push(`
+                    html += `
                     <div class="log">
-                        <b>${x.message}</b><br>
-                        <small>${x.eventId}</small>
+                        <b>${x.message}</b>
+                        <div class="meta">${x.eventId} | ${new Date(x.createdAt).toLocaleString()}</div>
                     </div>
-                `);
+                `;
                 });
 
-                document.getElementById("logs").innerHTML = html.join("");
+                document.getElementById("logContainer").innerHTML = html;
 
                 drawChart(labels, counts);
 
             } catch (err) {
-                document.getElementById("status").innerText = "DOWN";
-                document.getElementById("status").className = "red";
+                console.error(err);
+                document.getElementById("apiStatus").innerText = "Down";
+                document.getElementById("apiStatus").className = "red";
             }
         }
 
         function drawChart(labels, data) {
-
             const ctx = document.getElementById("chart");
+
+            if (!ctx) return;
 
             if (chart) chart.destroy();
 
             chart = new Chart(ctx, {
-                type: 'line',
+                type: "line",
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{
-                        data: data,
-                        borderColor: '#38bdf8'
+                        data,
+                        borderColor: "#38bdf8",
+                        fill: false
                     }]
                 }
             });
