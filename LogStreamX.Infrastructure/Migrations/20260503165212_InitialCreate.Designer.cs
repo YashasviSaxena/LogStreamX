@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LogStreamX.Infrastructure.Migrations
 {
     [DbContext(typeof(LogDbContext))]
-    [Migration("20260503164046_InitialCreate")]
+    [Migration("20260503165212_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

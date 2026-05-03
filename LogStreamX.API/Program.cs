@@ -4,43 +4,60 @@ using LogStreamX.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers
+// =======================
+// CONTROLLERS
+// =======================
 builder.Services.AddControllers();
 
-// Swagger
+// =======================
+// SWAGGER
+// =======================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // =======================
-// DATABASE (POSTGRES)
+// DATABASE (POSTGRES - RENDER SAFE)
 // =======================
 builder.Services.AddDbContext<LogDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         npgsql =>
         {
-            npgsql.EnableRetryOnFailure(5);
+            npgsql.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorCodesToAdd: null);
+
             npgsql.CommandTimeout(30);
         }));
 
 // =======================
-// BACKGROUND WORKER
+// BACKGROUND WORKER (KAFKA CONSUMER)
 // =======================
 builder.Services.AddHostedService<LogBackgroundWorker>();
 
 var app = builder.Build();
 
 // =======================
-// MIDDLEWARE
+// MIDDLEWARE PIPELINE
 // =======================
+
+// Swagger UI
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogStreamX.API v1");
+});
+
+// Routing
+app.UseRouting();
 
 app.UseAuthorization();
 
+// Controllers
 app.MapControllers();
 
-// Redirect root → Swagger
+// Root redirect → Swagger
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();

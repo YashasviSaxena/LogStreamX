@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using LogStreamX.Infrastructure.Models;
+﻿using LogStreamX.Infrastructure.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace LogStreamX.Infrastructure.Data;
 
@@ -10,6 +11,5 @@ public class LogDbContext : DbContext
     {
     }
 
-    // ✅ SINGLE CONSISTENT NAME (THIS FIXES YOUR ERROR)
-    public DbSet<LogEntry> Logs { get; set; }
+    public DbSet<LogEntry> Logs { get; set; } = null!;
 }
