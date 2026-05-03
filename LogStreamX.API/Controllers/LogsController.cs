@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using LogStreamX.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace LogStreamX.API.Controllers
 {
@@ -15,14 +16,20 @@ namespace LogStreamX.API.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetLogs()
+        public async Task<IActionResult> GetLogs()
         {
             try
             {
-                var logs = _db.LogEntries
+                // 🔥 ensures DB is reachable
+                if (!await _db.Database.CanConnectAsync())
+                {
+                    return StatusCode(500, new { error = "DB connection failed" });
+                }
+
+                var logs = await _db.LogEntries
                     .OrderByDescending(x => x.CreatedAt)
                     .Take(100)
-                    .ToList();
+                    .ToListAsync();
 
                 return Ok(logs);
             }
@@ -30,7 +37,8 @@ namespace LogStreamX.API.Controllers
             {
                 return StatusCode(500, new
                 {
-                    error = ex.Message
+                    error = ex.Message,
+                    stack = ex.StackTrace
                 });
             }
         }
