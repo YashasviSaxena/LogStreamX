@@ -1,4 +1,4 @@
-﻿namespace LogStreamX.API.Models;
+namespace LogStreamX.API.Models;
 
 public class LogRequest
 {

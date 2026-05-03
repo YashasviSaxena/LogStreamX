@@ -1,38 +1,34 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>LogStreamX.Worker</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- Worker -->
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
+
+		<!-- EF Core -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
+
+		<!-- Hosting -->
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
 
 		<!-- Kafka -->
 		<PackageReference Include="Confluent.Kafka" Version="2.14.0" />
 
-		<!-- Config system -->
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.7" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.7" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.7" />
+		<!-- Config -->
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
 
-		<!-- 🔥 FIXED SECURITY VULNERABILITIES -->
-		<PackageReference Include="Microsoft.Identity.Client" Version="4.83.3" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.7" />
+		<!-- Logging -->
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
 
-		<!-- Optional logging -->
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.7" />
-
-		<!-- Project references -->
-		<ProjectReference Include="..\LogStreamX.Infrastructure\LogStreamX.Infrastructure.csproj" />
-		<ProjectReference Include="..\LogStreamX.Shared\LogStreamX.Shared.csproj" />
 	</ItemGroup>
 
-	<!-- IMPORTANT: ensure config files are copied -->
 	<ItemGroup>
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -41,6 +37,11 @@
 		<None Update="appsettings.Development.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LogStreamX.Contracts\LogStreamX.Contracts.csproj" />
+		<ProjectReference Include="..\LogStreamX.Infrastructure\LogStreamX.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
-﻿using LogStreamX.API.Models;
+using LogStreamX.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
+using LogStreamX.Contracts;
 
 namespace LogStreamX.API.Controllers
 {
@@ -7,29 +8,14 @@ namespace LogStreamX.API.Controllers
     [Route("api/[controller]")]
     public class LogPushController : ControllerBase
     {
-        private static readonly List<LogEvent> _logs = new();
-
         [HttpPost]
-        public IActionResult Push([FromBody] LogEvent log)
+        public IActionResult Push(LogDto dto)
         {
-            if (log == null)
-                return BadRequest("Invalid log");
-
-            log.CreatedAt = DateTime.UtcNow;
-
-            _logs.Add(log);
-
             return Ok(new
             {
-                status = "Sent to Kafka",
-                eventId = log.EventId
+                status = "received",
+                dto
             });
-        }
-
-        [HttpGet("/api/Logs")]
-        public IActionResult GetLogs()
-        {
-            return Ok(_logs);
         }
     }
 }

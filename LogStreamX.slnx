@@ -1,7 +1,6 @@
 <Solution>
   <Project Path="LogStreamX.API/LogStreamX.API.csproj" />
-  <Project Path="LogStreamX.Dashboard/LogStreamX.Dashboard.csproj" />
+  <Project Path="LogStreamX.Contracts/LogStreamX.Contracts.csproj" />
   <Project Path="LogStreamX.Infrastructure/LogStreamX.Infrastructure.csproj" />
-  <Project Path="LogStreamX.Shared/LogStreamX.Shared.csproj" />
   <Project Path="LogStreamX.Worker/LogStreamX.Worker.csproj" />
 </Solution>

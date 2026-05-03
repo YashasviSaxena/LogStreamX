@@ -1,17 +1,20 @@
 ﻿using Confluent.Kafka;
+using LogStreamX.Contracts;
 using LogStreamX.Infrastructure.Data;
 using LogStreamX.Infrastructure.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace LogStreamX.Worker.Services
 {
-    public class KafkaConsumerService
+    public class KafkaConsumerService : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<KafkaConsumerService> _logger;
-        private readonly string _topic;
+        private readonly IConfiguration _config;
 
         public KafkaConsumerService(
             IServiceScopeFactory scopeFactory,
@@ -20,43 +23,58 @@ namespace LogStreamX.Worker.Services
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
-            _topic = config["Kafka:Topic"]!;
+            _config = config;
         }
 
-        // ✅ MUST BE PUBLIC (THIS FIXES YOUR ERROR)
-        public void StartConsuming(CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            return Task.Run(() => Consume(stoppingToken), stoppingToken);
+        }
+
+        private void Consume(CancellationToken cancellationToken)
         {
             var config = new ConsumerConfig
             {
-                BootstrapServers = "your-bootstrap",
-                GroupId = "logstreamx-worker-group",
+                BootstrapServers = _config["Kafka:BootstrapServers"],
+                GroupId = _config["Kafka:GroupId"],
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                SecurityProtocol = SecurityProtocol.SaslSsl,
-                SaslMechanism = SaslMechanism.Plain,
-                SaslUsername = "YOUR_API_KEY",
-                SaslPassword = "YOUR_API_SECRET"
+                EnableAutoCommit = true
             };
 
             using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
-            consumer.Subscribe(_topic);
+            consumer.Subscribe(_config["Kafka:Topic"]);
 
-            _logger.LogInformation("🔥 Kafka Consumer started...");
+            _logger.LogInformation("Kafka Consumer Started 🚀");
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var cr = consumer.Consume(cancellationToken);
-
-                var log = JsonSerializer.Deserialize<LogEntry>(cr.Message.Value);
-
-                if (log != null)
+                try
                 {
+                    var cr = consumer.Consume(cancellationToken);
+
+                    var logDto = JsonSerializer.Deserialize<LogDto>(cr.Message.Value);
+
+                    if (logDto == null) continue;
+
                     using var scope = _scopeFactory.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<LogDbContext>();
 
-                    db.LogEntries.Add(log);
+                    var entity = new LogEntry
+                    {
+                        EventId = logDto.EventId,
+                        Message = logDto.Message,
+                        Source = logDto.Source,
+                        CreatedAt = logDto.CreatedAt
+                    };
+
+                    db.LogEntries.Add(entity);
                     db.SaveChanges();
 
-                    _logger.LogInformation("✅ Saved to DB");
+                    _logger.LogInformation("Saved log: {EventId}", entity.EventId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Kafka processing error");
                 }
             }
         }

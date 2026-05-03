@@ -10,6 +10,6 @@ namespace LogStreamX.Infrastructure.Data
         {
         }
 
-        public DbSet<LogEntry> LogEntries { get; set; } = null!;
+        public DbSet<LogEntry> LogEntries { get; set; }
     }
 }
